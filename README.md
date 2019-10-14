@@ -18,4 +18,6 @@ prossimi passi:
     
 - implementazione di layers AND e OR
 - inserire nuovi indicatori, a partire da quelli della libreria di trading
+    - documentazione: https://mrjbq7.github.io/ta-lib/doc_index.html
+    
 - creare nuovi metodi
