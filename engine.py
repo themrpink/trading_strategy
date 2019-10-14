@@ -39,26 +39,27 @@ class Engine:
         next_strategy = True
         while next_strategy==True:
             next_strategy, result, self.last_timestamp = strategy.searchSignal(self.last_timestamp, count)
-            strategy_name="strategy"+str(count)
+            strategy_name="buy_strategy"+str(count)
             count+=1
             self.results[strategy_name]=result
             self.results[strategy_name]["timestamp"]=self.last_timestamp
-            self.buy_results.append({"timestamp":self.last_timestamp, "data":result, "succeded":next_strategy})
+            if next_strategy:
+                self.buy_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
     
     
     def findSellSignal(self, strategy):
         print("chiamata sell signal, riga 50")
         self.last_timestamp=0
-        self.data_extractor=DataExtractor("test.csv")
         count = 1
         next_strategy = True
         while next_strategy==True:
             next_strategy, result, self.last_timestamp = strategy.searchSignal(self.last_timestamp, count)
-            strategy_name="strategy"+str(count)
+            strategy_name="sell_strategy"+str(count)
             count+=1
             self.results[strategy_name]=result
             self.results[strategy_name]["timestamp"]=self.last_timestamp
-            self.sell_results.append({"timestamp":self.last_timestamp, "data":result, "succeded":next_strategy})
+            if next_strategy:
+                self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
     
     def compareBuyAndSell(self):
         for buy_signal in self.buy_results:
@@ -67,7 +68,7 @@ class Engine:
                 timestamp_sell = sell_signal["timestamp"]
                 if timestamp_sell>=timestamp_buy:
                    self.completed_strategies.append((timestamp_buy, timestamp_sell))
-                break
+                   break
     
 #    def findPrices(self):
 #        with open(self.data_extractor.)
@@ -700,12 +701,12 @@ class DataExtractor:
                 
                 
                 
-def drawResults(file):
+def drawResults(file, operation):
     diz = {}
     with open(file) as f:
         diz = json.load(f)
     n=1   
-    strategy = "strategy" + str(n)
+    strategy = operation+"_strategy" + str(n)
     draw_array = []
     while strategy in diz:
         
@@ -723,7 +724,10 @@ def drawResults(file):
 #            method = "layer"+str(n_layer)           
 #        draw_array.append(layer_array)     
         n+=1        
-        strategy = "strategy"+str(n)
+        strategy = operation+"_strategy"+str(n)
+        
+        
+        
     print(draw_array)
 #    a=[]
 #    
@@ -1090,18 +1094,22 @@ if __name__ == "__main__":
     engine.findBuySignal(strategy)
     print(engine.results)
     nome_file = engine.saveResults()
-    drawResults("motore1.json")
+    
 #    
     engine.findSellSignal(strategy2)
     print(engine.results)
     nome_file = engine.saveResults()
-    drawResults("motore1.json")
+    drawResults("motore1.json", "buy")
+    drawResults("motore1.json", "sell")
     data_extractor.createFile("test3.csv", 1440)
     
     
     engine.compareBuyAndSell()
     print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
     print(engine.completed_strategies)
+    print("BUY")
+    print(engine.buy_results)
+    print("SELL")
     print(engine.sell_results)
     print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
 #    volume = Volume(data_extractor, 1440)
