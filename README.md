@@ -10,7 +10,9 @@ prossimi passi:
         - https://realpython.com/python-csv/
         - https://www.programiz.com/python-programming/working-csv-files
     
-- algoritmo di identificazione dei gruppi di volumi
+- algoritmo di identificazione dei gruppi di volumi:
+    - realizzato e funzionante. Adesso:
+        - dare la possibilità d vedere se una candela di volume è verde o rossa (da fare al momento delle candlesticks)
 - sviluppo dei sistemi BUY/SELL e BUY & WAIT
     
 - sviluppo della GUI con QT:
