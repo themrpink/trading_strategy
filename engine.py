@@ -10,10 +10,11 @@ import talib as tl
 import json
 from datetime import datetime
 import matplotlib.pyplot as plt
+import csv
 
 class Engine:
     
-    def __init__(self, name, data_extractor, strategy):
+    def __init__(self, name, data_extractor):
         self.name=name
         self.last_timestamp = "0"
 
@@ -21,64 +22,90 @@ class Engine:
         self.layers = []  #lista ordinata di oggetti di tipo methods: quindi il punto é che l´user istanzia un oggetto metodo
                             #che contiene al suo interno le istanze degli indicatori che confronta.
                             #quindi il motodo piú semplice e sintetico per rappresentare un layer è un metodo stesso
-        self.results = {}                 #qua vengono salvati i risultati ( lista di dizionari)
-        
+        self.results = {}   
+        self.buy_results = []#qua vengono salvati i risultati ( lista di dizionari)
+        self.sell_results = []
         self.layers_structure = []  #questo è una lista di dizionari, ognuno ha un set di metodi. Questi vanno iterati fino a che non si trova il valore
-        self.strategy = strategy
+        self.completed_strategies=[]
         self.saved_file=""
         
     def addLayer(self, layer):  #questo layer, che é un method, deve arrivare dalle selezioni dell´user
         self.layers.append(layer)
+
         
-    def setStrategy(self, strategy):
-        self.strategy=strategy
-        
-    def findBuySignal(self):
+    def findBuySignal(self, strategy):
         print("chiamata iniziale, riga 34")
         count = 1
         next_strategy = True
         while next_strategy==True:
-            next_strategy, result, self.last_timestamp = self.strategy.searchSignal(self.last_timestamp, count)
+            next_strategy, result, self.last_timestamp = strategy.searchSignal(self.last_timestamp, count)
             strategy_name="strategy"+str(count)
             count+=1
             self.results[strategy_name]=result
             self.results[strategy_name]["timestamp"]=self.last_timestamp
-              
-    def findSignal(self):       
-     
-        i=0
-        signal=True
-        if len(self.layers)==0:
-            return False
-        timestamp=0
-        
-        while True:
-            
-            set_layers = self.layers_structure[0]
-            
-            for layer in set_layers:
-#                tp = layer.TP
-                
-                check, result = layer.execute()
-                last_timestamp = int(result["timestamp"])
-                if last_timestamp > timestamp:
-                    timestamp=last_timestamp
-                self.results.append(result) 
-                if check is False:
-                    print("il motore restituisce false, riga 64")
-                    return False                          
-           
-            self.layers_structure = self.layers_structure[1:]
-#            signal, resultData = self.layers[i].execute()
-#            self.results.append(resultData)
-            if not signal:
-                print("il motore restituisce false, riga 71")
-                return False
-            i+=1
-            if i>= len(self.layers):
-                print("il motore restituisce, riga 75")
-                print(signal)
-                return signal
+            self.buy_results.append({"timestamp":self.last_timestamp, "data":result, "succeded":next_strategy})
+    
+    
+    def findSellSignal(self, strategy):
+        print("chiamata sell signal, riga 50")
+        self.last_timestamp=0
+        self.data_extractor=DataExtractor("test.csv")
+        count = 1
+        next_strategy = True
+        while next_strategy==True:
+            next_strategy, result, self.last_timestamp = strategy.searchSignal(self.last_timestamp, count)
+            strategy_name="strategy"+str(count)
+            count+=1
+            self.results[strategy_name]=result
+            self.results[strategy_name]["timestamp"]=self.last_timestamp
+            self.sell_results.append({"timestamp":self.last_timestamp, "data":result, "succeded":next_strategy})
+    
+    def compareBuyAndSell(self):
+        for buy_signal in self.buy_results:
+            timestamp_buy = buy_signal["timestamp"]
+            for sell_signal in self.sell_results:
+                timestamp_sell = sell_signal["timestamp"]
+                if timestamp_sell>=timestamp_buy:
+                   self.completed_strategies.append((timestamp_buy, timestamp_sell))
+                break
+    
+#    def findPrices(self):
+#        with open(self.data_extractor.)
+#    def findSignal(self):       
+#     
+#        i=0
+#        signal=True
+#        if len(self.layers)==0:
+#            return False
+#        timestamp=0
+#        
+#        while True:
+#            
+#            set_layers = self.layers_structure[0]
+#            
+#            for layer in set_layers:
+##                tp = layer.TP
+#                
+#                check, result = layer.execute()
+#                last_timestamp = int(result["timestamp"])
+#                if last_timestamp > timestamp:
+#                    timestamp=last_timestamp
+#                self.results.append(result) 
+#                if check is False:
+#                    print("il motore restituisce false, riga 64")
+#                    return False                          
+#           
+#            self.layers_structure = self.layers_structure[1:]
+##            signal, resultData = self.layers[i].execute()
+##            self.results.append(resultData)
+#            if not signal:
+#                print("il motore restituisce false, riga 71")
+#                return False
+#            i+=1
+#            if i>= len(self.layers):
+#                print("il motore restituisce, riga 75")
+#                print(signal)
+#                return signal
             
     def saveResults(self):
         print("saving results, riga 80")
@@ -393,6 +420,7 @@ class DataExtractor:
         self.file=file
         self.data= ""#self.extractData()
         self.TP_files = {}
+        self.TP_files_csv = {}
         self.updated_file = ""
         self.timestamp = "0"
         self.file_opened=False
@@ -448,16 +476,17 @@ class DataExtractor:
             print("è stato scritto il file, linea 422")
         return self.timestamp#self.updated_file#, end
         
-    
+
     def createTPFromRawFile(self, file, tpValue, timestamp):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
         print("chiamato createTPFfromRawFile")
         if not "TP"+str(tpValue) in self.TP_files or int(timestamp)>=int(self.timestamp):
 #            self.timestamp=timestamp
             json_content={}
-            print("apartura del file principale, nome file: , riga 439") 
+            csv_content = [["timestamp","date","open","close","high","low","volume","average","direction"]]
+            print("apertura del file principale, nome file: , riga 439") 
             print(file)
             with open(file) as f:
-                candle_data = []          
+                candle_data = []      
                 first_line=f.readline()
                 data = first_line.split(",")
                 last_timestamp = data[0] 
@@ -473,8 +502,9 @@ class DataExtractor:
                     
                     if checkTP>=1:   #se é il momento di creare una candela
                         last_timestamp=actual_timestamp  #aggiorna il timestamp al punto attuale                   
-                        candlestick = self.createCandlestick(candle_data)  #chiama il metodo che crea la candela
+                        candlestick, candlestick_csv = self.createCandlestick(candle_data)  #chiama il metodo che crea la candela
                         json_content["TP"+str(tpValue)].append(candlestick)
+                        csv_content.append(candlestick_csv)
                         candle_data.clear()
     
                     candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
@@ -485,6 +515,17 @@ class DataExtractor:
                 print("TP"+str(tpValue)+".json")
             self.TP_files["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
             
+            with open("TP"+str(tpValue)+".csv", "w") as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerows(csv_content)            
+            
+            self.TP_files_csv["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
+
+            with open("TP"+str(tpValue)+"_from_dictionary.csv", "w") as csv_file:
+                fields = ["timestamp","date","open","close","high","low","volume","average","direction"]
+                writer = csv.DictWriter(csv_file, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(json_content["TP"+str(tpValue)])
         return self.TP_files["TP"+str(tpValue)]
     
     def createFile(self, file, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
@@ -492,27 +533,34 @@ class DataExtractor:
         if not "TP"+str(tpValue) in self.TP_files:# or timestamp!=self.timestamp:
 #            self.timestamp=timestamp
             json_content={}
-            print("apartura del file principale, nome file: , riga 477") 
+            csv_content = [["timestamp","date","open","close","high","low","volume","average","direction"]]
+            print("apertura del file principale, nome file: , riga 477") 
             print(file)
             with open(file) as f:
                 candle_data = []          
-                first_line=f.readline()
+                first_line = f.readline()
+                print("first line, riga 516")
+                print(first_line)
                 data = first_line.split(",")
                 last_timestamp = data[0] 
+                last_timestamp = last_timestamp.replace("\"" , "")
+                print(last_timestamp)
 #                date = datetime.fromtimestamp(int(last_timestamp))
                 candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
                 json_content["TP"+str(tpValue)] = []    
                 
                 for i, line in enumerate(f):
+                    line = line.replace("\"", "")
                     data = line.split(",")
-                    actual_timestamp=data[0]
+                    actual_timestamp = data[0]
                     actual_tp = (float(actual_timestamp) - float(last_timestamp))/60 #number of minutes
                     checkTP = actual_tp / tpValue
                     
                     if checkTP>=1:   #se é il momento di creare una candela
-                        last_timestamp=actual_timestamp  #aggiorna il timestamp al punto attuale                   
-                        candlestick = self.createCandlestick(candle_data)  #chiama il metodo che crea la candela
+                        last_timestamp = actual_timestamp  #aggiorna il timestamp al punto attuale                   
+                        candlestick, candlestick_csv = self.createCandlestick(candle_data)  #chiama il metodo che crea la candela
                         json_content["TP"+str(tpValue)].append(candlestick)
+                        csv_content.append(candlestick_csv)
                         candle_data.clear()
     
                     candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
@@ -522,6 +570,11 @@ class DataExtractor:
                 print("le candele sono stata scritte in un nuovo file, riga 418")
                 print("TP"+str(tpValue)+".json")
             self.TP_files["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
+            
+            with open("TP"+str(tpValue)+".csv", "w") as csv_file:
+                writer = csv.writer(csv_file)
+                writer.writerows(json_content["TP"+str(tpValue)])
+                
             
         return self.TP_files["TP"+str(tpValue)]
     def checkTPFile(self, tpValue): 
@@ -571,8 +624,8 @@ class DataExtractor:
         candlestick["volume"] = volume
         candlestick["average"] = average
         candlestick["direction"] = direction
-        
-        return candlestick
+        candlestick_csv = [timestamp, str(date), openprice, close, high, low, volume, average, direction]
+        return candlestick, candlestick_csv
     
         #quando vorró adattare questa parte dovró cambiare: questo va bene per un file giä diviso in candlesticks
     def extractData(self):
@@ -711,14 +764,14 @@ class Volume:
           
     def getData(self, timestamp):
         
-        print("apri il file "+ "TP"+str(self.timeperiod)+".json nell indicatore, riga 229")
+        print("apri il file "+ "TP"+str(self.timeperiod)+".json nell indicatore, riga 736")
         with open("TP"+str(self.timeperiod)+".json") as f:
             data = json.load(f)
 #            print(data)
             n=len(data["TP"+str(self.timeperiod)])
             print(n)
 
-            print("aggiungi i valori dell indicatore nei numpy arrays, riga 245")
+            print("aggiungi i valori dell indicatore nei numpy arrays, riga 743")
             for candle in data["TP"+str(self.timeperiod)]:
                 tupla=(float(candle["timestamp"]),float(candle["volume"]))
                 self.volumes_tuples.append(tupla)
@@ -775,6 +828,7 @@ class Volume:
             
     def convertToNP(self):  
         lista=[]
+        lista_time=[]
         for group in self.groups:
             time=group.values[0][0]
             group.values[0]=(time,0)
@@ -782,13 +836,196 @@ class Volume:
             group.values[-1]=(time,0)
             for value in group.values:
                 lista.append(value[1])
+                lista_time.append(value[0])
         np.array(lista)
-        return lista
+        return lista,lista_time
             
     def printGraph(self, lista):
         
         plt.plot(lista)
         plt.show()        
+        
+        
+        
+##############################################################
+        ######################################################
+        ######################################################
+        #############################################################################
+class VolumeExtractor:
+    
+    def __init__(self, data_extractor, timeperiod):
+        self.min_distance = 30
+        self.timeperiod = timeperiod
+        self.data_extractor = data_extractor
+        self.values = np.zeros(1)
+        self.name = "Volume"
+       # self.data_list = data_extractor.data
+        self.value_type = "volume"
+        self.volumes_tuples=[]
+        self.volume_blocks = []
+    
+    def getData(self):
+ 
+        with open("TP"+str(self.timeperiod)+".json") as f:
+            data = json.load(f)
+    #            print(data)
+           # n=len(data["TP"+str(self.timeperiod)])
+
+            for candle in data["TP"+str(self.timeperiod)]:
+                tupla=(float(candle["timestamp"]),float(candle["volume"]))
+                self.volumes_tuples.append(tupla)
+       
+        self.volumes_tuples.sort(key=lambda tupla: tupla[1])
+   
+        return self.volumes_tuples
+    
+    def createGroups(self):
+        tupla = self.volumes_tuples[0]
+        block1 = VolumeBlock()
+        block2 = VolumeBlock()
+        block1.last = tupla[0]
+#        block1.first=0
+        block1.candles.append(tupla)
+        block2.first = tupla[0]
+#        block2.last = tupla[0] + (tupla[0]/self.timeperiod)*self.min_distance
+        block2.candles.append(tupla) 
+        self.volume_blocks.append(block1)
+        self.volume_blocks.append(block2)
+        
+        for x in self.volumes_tuples[1:]:
+            timestamp = x[0]
+            for j,y in enumerate(self.volume_blocks):
+                check=False
+                if y.first==None and timestamp<y.last:                               
+                    if ((y.last-timestamp)/60)/self.timeperiod>=self.min_distance:
+                        y.first=timestamp
+                        y.candles.insert(0, x)
+                        check=True
+                    else:
+                        for i,t in enumerate(y.candles):
+                            if timestamp<t[0]:
+                                y.candles.insert(i, x)
+                                check=True
+                                break
+                        if not check:
+                            y.candles.append(x)
+                            check=True
+                            break
+                elif y.last==None and timestamp>y.first:                     
+                    if ((timestamp-y.first)/60)/self.timeperiod>=self.min_distance:
+                        y.last=timestamp
+                        y.candles.append(x)
+                        check=True
+                    else:
+                        for i,t in enumerate(y.candles):
+                            if timestamp<t[0]:
+                                y.candles.insert(i, x)
+                                check=True
+                                break
+                        if not check:
+                            y.candles.append(x)
+                            check=True
+                            break
+                         
+                elif y.first!=None and (0<((timestamp-y.first)/60)/self.timeperiod<self.min_distance):
+                    for i, value in enumerate(y.candles):
+                        if value[0]>timestamp:
+                            y.candles.insert(i,x)
+                            check=True
+                            break
+                   
+
+                    if not check:
+                        y.candles.append(x)
+                        check=True
+                        break  
+                    break
+                
+                elif y.last!=None and (0<((y.last-timestamp)/60)/self.timeperiod<self.min_distance):
+                    for i, value in enumerate(y.candles):
+                        if value[0]>timestamp:
+                            y.candles.insert(i,x)
+                            check=True
+                            break
+                        
+                    if not check:
+                        y.candles.append(x)
+                        check=True
+                        break                        
+                    break 
+                
+                elif y.first!=None and y.last!=None:     
+                    if ((timestamp-y.first)/60)/self.timeperiod>=self.min_distance and ((y.last-timestamp)/60)/self.timeperiod>=self.min_distance:# and j<(len(self.volume_blocks)-1):
+                        new_block=VolumeBlock()
+                        new_block.first=timestamp
+                        new_block.last=y.last
+                        
+                       # new_block.candles.append(x)
+                        y.last=timestamp
+                        #y.candles.append(x)
+                        k=0
+                        for i,t in enumerate(y.candles):
+                            if t[0]>timestamp:
+                                k=i-1
+                                check=True
+                                break
+                        new_block.candles=y.candles[k:]
+                        new_block.candles.insert(0, x)
+                        y.candles=y.candles[:k+1]
+                        y.candles.append(x)
+                        self.volume_blocks.insert(j+1, new_block)
+                        check=True
+                        break
+
+                
+                elif y.first!=None and ((timestamp-y.first)/60)/self.timeperiod>=self.min_distance:
+                    y.last=timestamp
+                    y.candles.append(x)
+                    new_block=VolumeBlock()
+                    new_block.first=timestamp
+                    self.volume_blocks.append(new_block)
+                    check=True
+                    break
+                
+                elif y.last!=None and ((y.last-timestamp)/60)/self.timeperiod>=self.min_distance:
+                    y.first=timestamp
+                    y.candles.insert(0,x)
+                    new_block=VolumeBlock()
+                    new_block.last=timestamp
+                    self.volume_blocks.insert(0,new_block)
+                    check=True
+                    break
+                
+                               
+                
+                if check==True:
+                    break       
+    def convertToNP(self):  
+        lista=[]
+        lista_time=[]
+        for group in self.volume_blocks:       
+            for value in group.candles:
+                if group.first==value[0] or group.last==value[0]:
+                    lista.append(0)
+                else:
+                    lista.append(value[1])
+                lista_time.append(value[0])
+        np.array(lista)
+        return lista,lista_time
+       
+    def printGraph(self, lista):
+        
+        plt.plot(lista)
+        plt.savefig('plot_name.png', dpi = 300)
+        plt.show()
+        
+        
+class VolumeBlock:
+    
+    def __init__(self):
+        self.first = None
+        self.last = None
+        self.candles = []
 if __name__ == "__main__":
     
 #crea il data_extractor
@@ -821,21 +1058,72 @@ if __name__ == "__main__":
     layer2 = {met3}
     
     strategy = Strategy([layer1,layer2])
+    data_extractor = DataExtractor("test.csv")
+
+#crea strategie
+
+    sma = SMAClass(data_extractor, 30)
+    sma.value_type="low"
+    sma.timeperiod=30
     
-    engine = Engine("motore1", data_extractor, strategy)
-    engine.findBuySignal()
+    sma2 = SMAClass(data_extractor, 20)
+    sma2.value_type="low"
+    sma2.timeperiod=20
+    
+    sma3 = SMAClass(data_extractor, 100)
+    sma3.value_type="low"
+    sma3.timeperiod=100
+    
+    sma4 = SMAClass(data_extractor, 50)
+    sma4.value_type="low"
+    sma4.timeperiod=50 
+    met4 = PriceCross(sma, sma2, "below", 20)
+    met5 = PriceCross(sma2, sma3, "above", 50)
+    met6 = PriceCross(sma3, sma4, "below", 30)
+    
+    layer3 = {met4, met5}
+    layer4 = {met6}
+    
+    strategy2 = Strategy([layer3,layer4])
+    
+    engine = Engine("motore1", data_extractor)
+    engine.findBuySignal(strategy)
     print(engine.results)
     nome_file = engine.saveResults()
     drawResults("motore1.json")
 #    
-    data_extractor.createFile("test.csv", 900)
-    volume = Volume(data_extractor, 900)
-    volume.getData(0)
-    lista1=[]
-    for x in volume.volume_originale:
-        lista1.append(x[1])
-    volume.printGraph(np.array(lista1))
-    volume.createGroups()
-    lista=volume.convertToNP()
-    volume.printGraph(lista)
-    print(len(volume.groups))
+    engine.findSellSignal(strategy2)
+    print(engine.results)
+    nome_file = engine.saveResults()
+    drawResults("motore1.json")
+    data_extractor.createFile("test3.csv", 1440)
+    
+    
+    engine.compareBuyAndSell()
+    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+    print(engine.completed_strategies)
+    print(engine.sell_results)
+    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+#    volume = Volume(data_extractor, 1440)
+#    volume.getData(0)
+#    lista1=[]
+#    for x in volume.volume_originale:
+#        lista1.append(x[1])
+#    volume.printGraph(np.array(lista1))
+#    volume.createGroups()
+#    lista,lista_time=volume.convertToNP()
+#    volume.printGraph(lista)
+   # print(lista_time)
+    
+    volume2=VolumeExtractor(data_extractor, 1440)
+    volume2.getData()
+    volume2.createGroups()
+    lista, lista_time=volume2.convertToNP()
+    volume2.printGraph(lista)
+    print(len(volume2.volume_blocks))
+#    for x in volume2.volume_blocks:
+#        print(x.first)
+#        print(x.last)
+#        
+#    print(engine.buy_results)
+  #  print(lista_time)
