@@ -61,6 +61,94 @@ class Engine:
             if next_strategy:
                 self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
     
+    def buyAndWait(self, strategy, time_distance):
+        all_rows=[]
+        self.last_timestamp=0
+        self.findBuySignal(strategy)
+        file = self.data_extractor.file
+        print(file)
+        sell_timeframes=[]
+        for result in self.buy_results:
+            timestamp = int(result["timestamp"])
+#            print(timestamp)
+            with open (file, "r") as f:
+                 csv_reader = csv.reader(f, delimiter=',')
+                 for row in csv_reader:
+#                     print(row)
+                     if int(row[0])>=timestamp:
+                         print(timestamp)
+                         buy_price=float(row[1])  #questi buy price devo salvarli per poi associarli con il sell price finale
+                         print(buy_price)
+                         tuple_list, rows = self.wait(buy_price, timestamp, file, timestamp+time_distance)
+#                         print("stampo i risultati ri riga 77")
+#                         print(tuple_list, rows)
+                         sell_timeframes.append(tuple_list)
+                         all_rows.append(rows)
+                         break
+#        print(sell_timeframes)
+#        print(all_rows)
+        tot_price=0
+        numb_of_prices=0
+        for timeframe in sell_timeframes:
+            numb_of_prices+=1
+            max_price = (0,0)
+            for tupla in timeframe:
+                price = tupla[1]
+                if price > max_price[1]:
+                    max_price=tupla
+            tot_price+=max_price[1]
+        if numb_of_prices!=0:
+            average_max_price = tot_price/numb_of_prices
+        print(average_max_price)
+        sell_signals=[]
+        for rows in all_rows:
+            for row in rows:
+                if average_max_price <= float(row[1]):
+                    sell_signals.append(row)
+                    print(row)
+                    break
+        
+        return sell_signals
+                    
+    
+    def wait(self, buy_price, timestamp, file, time_distance):
+        tuple_list = []
+        rows=[]
+        with open (file, "r") as f:
+             csv_reader = csv.reader(f, delimiter=',')
+#             try:
+#                 row=csv_reader.__next__()
+#             except:
+#                 return tuple_list, rows
+#             
+#             while int(row[0]) < timestamp:
+#                 row=csv_reader.__next__()
+             for row in csv_reader:
+                 if int(row[0])>=timestamp:
+                     break
+#             print("row:")
+#             print(row)
+##                     break
+#             while int(row[0])<time_distance:
+#                 try:
+#                     row=csv_reader.__next__()
+#                 except:
+#                    return tuple_list, rows
+            
+            
+             for row in csv_reader:
+#                 print(row)
+                 rows.append(row)
+                 if int(row[0])>=time_distance:                    
+                     break
+                 tupla = (int(row[0]), float(row[1]))
+                
+                 tuple_list.append(tupla)
+        return tuple_list, rows
+            
+    
+    
+    
     def compareBuyAndSell(self):
         for buy_signal in self.buy_results:
             timestamp_buy = buy_signal["timestamp"]
@@ -70,55 +158,15 @@ class Engine:
                    self.completed_strategies.append((timestamp_buy, timestamp_sell))
                    break
     
-#    def findPrices(self):
-#        with open(self.data_extractor.)
-#    def findSignal(self):       
-#     
-#        i=0
-#        signal=True
-#        if len(self.layers)==0:
-#            return False
-#        timestamp=0
-#        
-#        while True:
-#            
-#            set_layers = self.layers_structure[0]
-#            
-#            for layer in set_layers:
-##                tp = layer.TP
-#                
-#                check, result = layer.execute()
-#                last_timestamp = int(result["timestamp"])
-#                if last_timestamp > timestamp:
-#                    timestamp=last_timestamp
-#                self.results.append(result) 
-#                if check is False:
-#                    print("il motore restituisce false, riga 64")
-#                    return False                          
-#           
-#            self.layers_structure = self.layers_structure[1:]
-##            signal, resultData = self.layers[i].execute()
-##            self.results.append(resultData)
-#            if not signal:
-#                print("il motore restituisce false, riga 71")
-#                return False
-#            i+=1
-#            if i>= len(self.layers):
-#                print("il motore restituisce, riga 75")
-#                print(signal)
-#                return signal
+
             
     def saveResults(self):
         print("saving results, riga 80")
         with open(self.name+".json", "w") as f:
             json.dump(self.results, f)
         return self.name+".json"
-#    def checkStrategy(self, strategy):
         
-        
-#qua sappiamo a questo punto se il risultato lancia un segnale positivo o no
-#devo capire come, a partire da un indice, ricavare di nuovo il timestamp
-    
+
     
 class Strategy:
     
@@ -171,22 +219,7 @@ class Strategy:
 #        last_timestamp = self.results[self.layers[-1].name][-1]["timestamp"]
         print("la strategia N "+str(count)+" ha avuto successo, torna true, riga 127")
         return True, self.results, last_timestamp
-        
-#        
-#    def remove(self, method):
-#        group_dict = self.layers[0]
-#        for key in group_dict:
-#            group_dict[key].remove(method)
-#            if len(group_dict[key])==0:
-#                self.layers.remove(group_dict)
-#                break
-#            break
-#        if len(self.layers)==0:
-#            self.layers = self.layers_copy.copy()
-#            return True
-#        return False
-#        
-    
+
     
 
 class PriceCross():
@@ -248,10 +281,7 @@ class PriceCross():
             i+=1
             
         
-        
 
-#tutti gli indicatori
-#allora: il periodo generale è dato dal data_object. 
 class SMAClass:
     def __init__(self, data_extractor, timeperiod):
         
@@ -403,18 +433,7 @@ class SMAClass:
         print(self.values)
         return self.values
 
-##classe data
 
-##classe motore
-## ogni coppia deve avere lo stesso timelapse
-#ogni volta che viene scelta una valuta e/o modificato il timelapse, viene:
-#1)  istanziata una nuova Data class se necessario aprire un nuovo file
-#2)  estratto un nuovo timelapse
-
-#i dati vengono memorizzati in self.data ma anche è possibile salvarli in un file json
-#self.data è una lista di dizionari, che per ogni candlestich hanno tutti i dati
-#l'ideale sarebbe la lista di tutte le transazioni, dalla quale ricavare tutti i possibili timeperiods 
-#con un nuovo apposito metodo
 
 class DataExtractor:
     def __init__(self, file):
@@ -697,8 +716,7 @@ class DataExtractor:
         with open(filename, "w") as f:
             for x in self.data:
                 json.dump(x, f) 
-                
-                
+
                 
                 
 def drawResults(file, operation):
@@ -739,126 +757,13 @@ def drawResults(file, operation):
     np_array = np.array(draw_array)
     plt.plot(np_array)
     plt.show()
-  
 
-###########################################################################
-###########################################################################
-###########################################################################
-
-
-class VolumeGroup:
-    
-    def __init__(self):
-        self.values = []
         
 
-class Volume:
-    
-    def __init__(self, data_extractor, TP):
-        self.timeperiod = TP
-        self.data_extractor = data_extractor
-        self.values = np.zeros(1)
-        self.name = "Volume"
-        self.data_list = data_extractor.data
-        self.value_type = "volume"
-        self.groups = []
-        self.volumes_tuples=[]
-        self.volume_originale=[]
-        
-          
-    def getData(self, timestamp):
-        
-        print("apri il file "+ "TP"+str(self.timeperiod)+".json nell indicatore, riga 736")
-        with open("TP"+str(self.timeperiod)+".json") as f:
-            data = json.load(f)
-#            print(data)
-            n=len(data["TP"+str(self.timeperiod)])
-            print(n)
-
-            print("aggiungi i valori dell indicatore nei numpy arrays, riga 743")
-            for candle in data["TP"+str(self.timeperiod)]:
-                tupla=(float(candle["timestamp"]),float(candle["volume"]))
-                self.volumes_tuples.append(tupla)
-        self.volume_originale=self.volumes_tuples.copy()
-        self.volumes_tuples.sort(key=lambda tupla: tupla[1])
-            
-        return self.volumes_tuples
-    
-    def createGroups(self):
-        
-        tupla1 = self.volumes_tuples[0]
-        tupla2 = self.volumes_tuples[1]
-        self.volumes_tuples.remove(tupla1)
-        self.volumes_tuples.remove(tupla2)
-
-        first_group = VolumeGroup()
-        
-        if tupla1[0]>tupla2[0]:
-            first_group.values.append(tupla2)
-            first_group.values.append(tupla1)
-        else:
-            first_group.values.append(tupla1)
-            first_group.values.append(tupla2)    
-            
-        self.groups.append(first_group)
-        
-        for tupla in self.volumes_tuples:
-            self.insertGroup(tupla)
-            
-        return self.groups
-        
-    def insertGroup(self, tupla):
-               
-            if tupla[0] < self.groups[0].values[0][0]:
-                new_group = VolumeGroup()
-                new_group.values.append(tupla)
-                new_group.values.append(self.groups[0].values[-1])
-                self.groups.insert(0,new_group)
-                return
-
-            for group in self.groups:
-                if group.values[0][0]<tupla[0]<group.values[-1][0]:
-                    for i in range(len(group.values)):
-                        if group.values[i][0]>tupla[0]:
-                            group.values.insert(i, tupla)
-                            return
-            
-            group = self.groups[-1]
-            new_group = VolumeGroup()
-            new_group.values.append(group.values[-1])
-            new_group.values.append(tupla)
-            self.groups.append(new_group)
-            return
-            
-    def convertToNP(self):  
-        lista=[]
-        lista_time=[]
-        for group in self.groups:
-            time=group.values[0][0]
-            group.values[0]=(time,0)
-            time=group.values[-1][0]
-            group.values[-1]=(time,0)
-            for value in group.values:
-                lista.append(value[1])
-                lista_time.append(value[0])
-        np.array(lista)
-        return lista,lista_time
-            
-    def printGraph(self, lista):
-        
-        plt.plot(lista)
-        plt.show()        
-        
-        
-        
-##############################################################
-        ######################################################
-        ######################################################
-        #############################################################################
 class VolumeExtractor:
     
-    def __init__(self, data_extractor, timeperiod):
-        self.min_distance = 30
+    def __init__(self, data_extractor, timeperiod, min_distance):
+        self.min_distance = min_distance
         self.timeperiod = timeperiod
         self.data_extractor = data_extractor
         self.values = np.zeros(1)
@@ -1030,6 +935,8 @@ class VolumeBlock:
         self.first = None
         self.last = None
         self.candles = []
+
+
 if __name__ == "__main__":
     
 #crea il data_extractor
@@ -1040,19 +947,15 @@ if __name__ == "__main__":
 
     sma = SMAClass(data_extractor, 30)
     sma.value_type="low"
-    sma.timeperiod=30
     
     sma2 = SMAClass(data_extractor, 20)
     sma2.value_type="low"
-    sma2.timeperiod=20
     
     sma3 = SMAClass(data_extractor, 100)
     sma3.value_type="low"
-    sma3.timeperiod=100
     
     sma4 = SMAClass(data_extractor, 50)
-    sma4.value_type="low"
-    sma4.timeperiod=50    
+    sma4.value_type="low" 
     
     met1 = PriceCross(sma, sma2, "above", 100)
     met2 = PriceCross(sma2, sma3, "above", 50)
@@ -1062,76 +965,69 @@ if __name__ == "__main__":
     layer2 = {met3}
     
     strategy = Strategy([layer1,layer2])
-    data_extractor = DataExtractor("test.csv")
-
-#crea strategie
-
-    sma = SMAClass(data_extractor, 30)
-    sma.value_type="low"
-    sma.timeperiod=30
     
-    sma2 = SMAClass(data_extractor, 20)
-    sma2.value_type="low"
-    sma2.timeperiod=20
     
-    sma3 = SMAClass(data_extractor, 100)
-    sma3.value_type="low"
-    sma3.timeperiod=100
     
-    sma4 = SMAClass(data_extractor, 50)
-    sma4.value_type="low"
-    sma4.timeperiod=50 
-    met4 = PriceCross(sma, sma2, "below", 20)
-    met5 = PriceCross(sma2, sma3, "above", 50)
-    met6 = PriceCross(sma3, sma4, "below", 30)
     
-    layer3 = {met4, met5}
-    layer4 = {met6}
+#    data_extractor = DataExtractor("test.csv")
+#
+##crea strategie
+#
+#    sma = SMAClass(data_extractor, 30)
+#    sma.value_type="low"
+#    sma.timeperiod=30
+#    
+#    sma2 = SMAClass(data_extractor, 20)
+#    sma2.value_type="low"
+#    sma2.timeperiod=20
+#    
+#    sma3 = SMAClass(data_extractor, 100)
+#    sma3.value_type="low"
+#    sma3.timeperiod=100
+#    
+#    sma4 = SMAClass(data_extractor, 50)
+#    sma4.value_type="low"
+#    sma4.timeperiod=50 
+#    met4 = PriceCross(sma, sma2, "below", 20)
+#    met5 = PriceCross(sma2, sma3, "above", 50)
+#    met6 = PriceCross(sma3, sma4, "below", 30)
+#    
+#    layer3 = {met4, met5}
+#    layer4 = {met6}
+#    
+#    strategy2 = Strategy([layer3,layer4])
     
-    strategy2 = Strategy([layer3,layer4])
-    
-    engine = Engine("motore1", data_extractor)
-    engine.findBuySignal(strategy)
-    print(engine.results)
-    nome_file = engine.saveResults()
+#    engine = Engine("motore1", data_extractor)
+#    
+#    lista = engine.buyAndWait(strategy, 9432000)
+  
+#    engine.findBuySignal(strategy)
+#    print(engine.results)
+#    nome_file = engine.saveResults()
     
 #    
-    engine.findSellSignal(strategy2)
-    print(engine.results)
-    nome_file = engine.saveResults()
-    drawResults("motore1.json", "buy")
-    drawResults("motore1.json", "sell")
-    data_extractor.createFile("test3.csv", 1440)
-    
-    
-    engine.compareBuyAndSell()
-    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
-    print(engine.completed_strategies)
-    print("BUY")
-    print(engine.buy_results)
-    print("SELL")
-    print(engine.sell_results)
-    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
-#    volume = Volume(data_extractor, 1440)
-#    volume.getData(0)
-#    lista1=[]
-#    for x in volume.volume_originale:
-#        lista1.append(x[1])
-#    volume.printGraph(np.array(lista1))
-#    volume.createGroups()
-#    lista,lista_time=volume.convertToNP()
-#    volume.printGraph(lista)
-   # print(lista_time)
-    
-    volume2=VolumeExtractor(data_extractor, 1440)
+#    lista = engine.findSellSignal(strategy2)
+#    print(lista)
+#    print(engine.results)
+#    nome_file = engine.saveResults()
+#    drawResults("motore1.json", "buy")
+#    drawResults("motore1.json", "sell")
+#    data_extractor.createFile("test3.csv", 1440)
+#    
+#    
+#    engine.compareBuyAndSell()
+#    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+#    print(engine.completed_strategies)
+#    print("BUY")
+#    print(engine.buy_results)
+#    print("SELL")
+#    print(engine.sell_results)
+#    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+#
+#    
+    volume2=VolumeExtractor(data_extractor, 1440,20)
     volume2.getData()
     volume2.createGroups()
     lista, lista_time=volume2.convertToNP()
     volume2.printGraph(lista)
     print(len(volume2.volume_blocks))
-#    for x in volume2.volume_blocks:
-#        print(x.first)
-#        print(x.last)
-#        
-#    print(engine.buy_results)
-  #  print(lista_time)
