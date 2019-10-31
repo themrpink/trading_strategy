@@ -436,7 +436,7 @@ class SMAClass:
 
 
 class DataExtractor:
-    def __init__(self, file):
+    def __init__(self, file, ts_start=0, ts_end=0, filename="new_file.csv"):
         self.file=file
         self.data= ""#self.extractData()
         self.TP_files = {}
@@ -444,8 +444,37 @@ class DataExtractor:
         self.updated_file = ""
         self.timestamp = "0"
         self.file_opened=False
-    
-    
+        self.ts_start=float(ts_start)
+        self.ts_end=float(ts_end)
+#        self.setFile()
+        self.filename=filename
+        
+    def setFile(self):
+        print("lanciato il setFile")
+        if self.ts_end==0:
+            return
+
+        try:
+            with open(self.file, "r") as f:
+                f.readline()
+                line=f.readline()
+                ts=float(line.split(",")[0])
+                while ts<self.ts_start:
+                    line=f.readline()
+                    ts=float(line.split(",")[0])
+                print("trovato inizio")
+                with open("new_file.csv", "w") as nf:
+                    while ts<=self.ts_end:
+                        nf.write(line)
+                        line=f.readline()
+                        ts=float(line.split(",")[0])
+                    print("creato new_file.csv")          
+        except:
+            return False
+        
+        return True
+#        self.file=self.filename
+        
     def updateFile(self, timestamp): 
         
         print("update del file")
@@ -973,13 +1002,13 @@ if __name__ == "__main__":
 #
 ##crea strategie
 #
-#    sma = SMAClass(data_extractor, 30)
-#    sma.value_type="low"
-#    sma.timeperiod=30
-#    
-#    sma2 = SMAClass(data_extractor, 20)
-#    sma2.value_type="low"
-#    sma2.timeperiod=20
+    sma = SMAClass(data_extractor, 30)
+    sma.value_type="low"
+    sma.timeperiod=30
+    
+    sma2 = SMAClass(data_extractor, 20)
+    sma2.value_type="low"
+    sma2.timeperiod=20
 #    
 #    sma3 = SMAClass(data_extractor, 100)
 #    sma3.value_type="low"

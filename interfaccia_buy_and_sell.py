@@ -337,10 +337,10 @@ class Ui_MainWindow(object):
         self.pushButton_0.clicked.connect(self.instantiateEngine)
         
         #crea e rimuovi layers nella tabella
-        self.pushButton_2.clicked.connect(self.addLayer)
-        self.pushButton_7.clicked.connect(self.addLayer)
-        self.pushButton_4.clicked.connect(self.removeLayer)
-        self.pushButton_5.clicked.connect(self.removeLayer)
+        self.pushButton_2.clicked.connect(partial(self.addLayer, i=1))
+        self.pushButton_7.clicked.connect(partial(self.addLayer, i=2))
+        self.pushButton_4.clicked.connect(partial(self.removeLayer, i=1))
+        self.pushButton_5.clicked.connect(partial(self.removeLayer, i=2))
         
         self.tableWidget_3.cellDoubleClicked.connect(self.layerMethods)
         self.tableWidget.cellDoubleClicked.connect(self.layerMethods)
@@ -423,39 +423,53 @@ class Ui_MainWindow(object):
         m.show()
         
 #    @pyqtSlot()
-    def addLayer(self):
-        if len(self.tableWidget.selectedItems())==0:
-            rowPosition = self.tableWidget.rowCount()
-            self.tableWidget.insertRow(rowPosition)
-            self.tableWidget.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
-            print(self.tableWidget.selectedItems())
-            m=Layer()          
-            self.layers_buy.insert(rowPosition-1, m)
-
+    def addLayer(self, tag):
+        
+        if tag==1:
+            table=self.tableWidget
+            layers = self.layers_buy
         else:
-            selectedRow = self.tableWidget.selectedItems()[0]
-            if self.lineEdit_2.text()!="":
-               selectedRow = int(self.lineEdit_2.text())
-            rowPosition=selectedRow.row()
-            self.tableWidget.insertRow(rowPosition)
-            self.tableWidget.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
-            print(self.tableWidget.selectedItems())
-            m=Layer()          
-            self.layers_buy.insert(rowPosition-1, m)
-
+            table=self.tableWidget_3
+            layers = self.layers_sell
+            
+        try:
+            if len(table.selectedItems())==0:
+                rowPosition = table.rowCount()
+                table.insertRow(rowPosition)
+                table.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
+                print(table.selectedItems())
+                m=Layer()          
+                layers.insert(rowPosition-1, m)
+    
+            else:
+                selectedRow = table.selectedItems()[0]
+                rowPosition=selectedRow.row()
+                if str(self.lineEdit_2.text())!="":
+                   print(str(self.lineEdit_2.text()))
+                   rowPosition = int(self.lineEdit_2.text())
+                table.insertRow(rowPosition)
+                table.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
+                print(table.selectedItems())
+                m=Layer()          
+                self.layers.insert(rowPosition-1, m)
+        except:
+            return
         
 #    @pyqtSlot()   
-    def removeLayer(self):
-#        if len(self.table.selectedItems())==0:
-#            rowPosition = self.table.rowCount()
-#            self.table.removeRow(rowPosition)
-#            self.layers.pop(rowPosition-1)
-#        else:
-        if len(self.tableWidget.selectedItems())!=0:
-            selectedRow = self.tableWidget.selectedItems()[0]
+    def removeLayer(sel, tag):
+
+        if tag==1:
+            table=self.tableWidget
+            layers = self.layers_buy
+        else:
+            table=self.tableWidget_3
+            layers = self.layers_sell
+            
+        if len(table.selectedItems())!=0:
+            selectedRow = table.selectedItems()[0]
             rowPosition=selectedRow.row()
-            self.tableWidget.removeRow(rowPosition)
-            self.layers_buy.pop(rowPosition-1)
+            table.removeRow(rowPosition)
+            layer.pop(rowPosition-1)
         else:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Warning)
@@ -484,7 +498,7 @@ class Layer(QWidget):
         self.table = QTableWidget()
         self.table.setRowCount(0)
         self.table.setColumnCount(1)
-        self.table.cellDoubleClicked[str].connect(self.layerMethods) 
+        self.table.cellDoubleClicked.connect(self.layerMethods) 
         
         self.btn_add = QPushButton("add method")
         self.btn_remove = QPushButton("remove method")
