@@ -337,14 +337,16 @@ class Ui_MainWindow(object):
         self.pushButton_0.clicked.connect(self.instantiateEngine)
         
         #crea e rimuovi layers nella tabella
-        self.pushButton_2.clicked.connect(partial(self.addLayer, i=1))
-        self.pushButton_7.clicked.connect(partial(self.addLayer, i=2))
-        self.pushButton_4.clicked.connect(partial(self.removeLayer, i=1))
-        self.pushButton_5.clicked.connect(partial(self.removeLayer, i=2))
-        
+        self.pushButton_2.clicked.connect(partial(self.addLayer, tag=1))
+        self.pushButton_7.clicked.connect(partial(self.addLayer, tag=2))
+        self.pushButton_4.clicked.connect(partial(self.removeLayer, tag=1))
+        self.pushButton_5.clicked.connect(partial(self.removeLayer, tag=2))
+        self.pushButton_3.clicked.connect(partial(self.invertiLayer, tag=1))
+        self.pushButton_6.clicked.connect(partial(self.invertiLayer, tag=2))        
         self.tableWidget_3.cellDoubleClicked.connect(self.layerMethods)
         self.tableWidget.cellDoubleClicked.connect(self.layerMethods)
         
+    
         
     def getfile(self):
         self.dlg =QFileDialog()
@@ -422,7 +424,7 @@ class Ui_MainWindow(object):
         m = self.layers_buy[rowPosition-1]
         m.show()
         
-#    @pyqtSlot()
+    @pyqtSlot()
     def addLayer(self, tag):
         
         if tag==1:
@@ -451,25 +453,25 @@ class Ui_MainWindow(object):
                 table.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
                 print(table.selectedItems())
                 m=Layer()          
-                self.layers.insert(rowPosition-1, m)
+                layers.insert(rowPosition-1, m)
         except:
             return
         
 #    @pyqtSlot()   
-    def removeLayer(sel, tag):
+    def removeLayer(self, tag):
 
         if tag==1:
-            table=self.tableWidget
+            table = self.tableWidget
             layers = self.layers_buy
         else:
             table=self.tableWidget_3
             layers = self.layers_sell
             
-        if len(table.selectedItems())!=0:
+        if len(table.selectedItems())>0:
             selectedRow = table.selectedItems()[0]
             rowPosition=selectedRow.row()
             table.removeRow(rowPosition)
-            layer.pop(rowPosition-1)
+            layers.pop(rowPosition-1)
         else:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Warning)
@@ -479,9 +481,35 @@ class Ui_MainWindow(object):
 
 
 
+    def invertiLayer(self, tag):
+        if tag==1:
+            table = self.tableWidget
+            layers = self.layers_buy
+            edit1 = self.lineEdit_2
+            edit2 = self.lineEdit_3
+        else:
+            table=self.tableWidget_3
+            layers = self.layers_sell        
+            edit1 = self.lineEdit_5
+            edit2 = self.lineEdit_4
+            
+            
+        first = int(edit1.text())
+        second = int(edit2.text())
+        
+        layer1 = layers[first-1]
+        layer2 = layers[second-1]
+        
+        layers[first-1]=layer2
+        layers[second-1]=layer1
+        
+        row1=table.rowAt(first)
+        row2=table.rowAt(second)
 
-
-
+        table.insertRow(first)
+        table.insertRow(second)
+        
+        
 class Layer(QWidget):
     def __init__(self):
         super().__init__()
@@ -497,14 +525,14 @@ class Layer(QWidget):
              
         self.table = QTableWidget()
         self.table.setRowCount(0)
-        self.table.setColumnCount(1)
+        self.table.setColumnCount(2)
         self.table.cellDoubleClicked.connect(self.layerMethods) 
         
         self.btn_add = QPushButton("add method")
         self.btn_remove = QPushButton("remove method")
         
-        self.btn_add.clicked.connect(self.addLayer)
-        self.btn_remove.clicked.connect(self.removeLayer)
+        self.btn_add.clicked.connect(self.addMethod)
+        self.btn_remove.clicked.connect(self.removeMethod)
         
         self.layout.addWidget(self.table)
         self.layout.addWidget(self.btn_add)
@@ -516,21 +544,29 @@ class Layer(QWidget):
         
 
     @pyqtSlot(str)
-    def insertMethod(self, arg1):
-        
-        if arg1=="PriceCross":
+    def insertMethod(self):
+        arg1 = self.combo.currentText()
+        if arg1=="price cross":
             pcw = PriceCrossWidget()
-            pcw.show()
-            self.methods.add
+            self.methods.append(pcw)
+#            pcw.show()
+            
+            
     @pyqtSlot()
-    def addLayer(self):
+    def addMethod(self):
         rowPosition = self.table.rowCount()
         self.table.insertRow(rowPosition)
+        
         self.table.setItem(rowPosition,0, QTableWidgetItem(self.combo.currentText()))  
+        self.table.setCellWidget(rowPosition,0,PriceCrossWidget())
+        print(self.table.cellWidget(rowPosition,0).valido)
+        self.table.setItem(rowPosition,1, QTableWidgetItem(str(self.table.cellWidget(rowPosition,0).valido))) 
+#        self.table.setItem(rowPosition,1, QTableWidgetItem("sssss") )
+        self.insertMethod()
 #        self.combo.cu
           
     @pyqtSlot()   
-    def removeLayer(self):
+    def removeMethod(self):
 
         if len(self.table.selectedItems())!=0:
             selectedRow = self.table.selectedItems()[0]
@@ -548,7 +584,7 @@ class Layer(QWidget):
     def layerMethods(self):
         selectedRow = self.table.selectedItems()[0]
         rowPosition=selectedRow.row()
-        m = self.layers[rowPosition-1]
+        m = self.methods[rowPosition-1]
         m.show()        
         
         
@@ -569,16 +605,16 @@ class DevelopedMethods:
 class PriceCrossWidget(QWidget):
     def __init__(self):
         super().__init__()  
-        
-        sma = engine.SMAClass(data_extractor, 30)
-        sma.value_type="low"
-        sma.timeperiod=30
-        
-        sma2 = engine.SMAClass(data_extractor, 20)
-        print(data_extractor.file)
-        sma2.value_type="low"
-        sma2.timeperiod=20        
-        self.instance=engine.PriceCross(sma,sma2,"above", 50)
+        self.valido=False
+#        sma = engine.SMAClass(data_extractor, 30)
+#        sma.value_type="low"
+#        sma.timeperiod=30
+#        
+#        sma2 = engine.SMAClass(data_extractor, 20)
+#        print(data_extractor.file)
+#        sma2.value_type="low"
+#        sma2.timeperiod=20        
+        self.instance=engine.PriceCross()#sma,sma2,"above", 50)
                     
 if __name__=="__main__":
     

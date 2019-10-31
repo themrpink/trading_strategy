@@ -224,13 +224,13 @@ class Strategy:
 
 class PriceCross():
     
-    def __init__(self, indicator1, indicator2, crossType, TP): #viene istanziato con due array di dati da due indicatori
-        self.indicator1= indicator1  #istanza dell´indicatore
-        self.indicator2 = indicator2
-        self.ind1=indicator1.values  #array dell´indicatore
-        self.ind2=indicator2.values 
-        self.crossType = crossType   #"above" o "below" a seconda che si cerchi un cross che sale o che scende di ind1 su ind2
-        self.TP=TP
+    def __init__(self): #viene istanziato con due array di dati da due indicatori
+        self.indicator1= ""#indicator1  #istanza dell´indicatore
+        self.indicator2 =""# indicator2
+        self.ind1=""#indicator1.values  #array dell´indicatore
+        self.ind2=""#indicator2.values 
+        self.crossType =""# crossType   #"above" o "below" a seconda che si cerchi un cross che sale o che scende di ind1 su ind2
+        self.TP=""#TP
 #    def getData(self, timestamp):
 #        
         
