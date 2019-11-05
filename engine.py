@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 import matplotlib.pyplot as plt
 import csv
+import traceback
 
 class Engine:
     
@@ -21,7 +22,7 @@ class Engine:
         self.data_extractor = data_extractor
         self.layers = []  #lista ordinata di oggetti di tipo methods: quindi il punto é che l´user istanzia un oggetto metodo
                             #che contiene al suo interno le istanze degli indicatori che confronta.
-                            #quindi il motodo piú semplice e sintetico per rappresentare un layer è un metodo stesso
+                            #quindi il metodo piú semplice e sintetico per rappresentare un layer è un metodo stesso
         self.results = {}   
         self.buy_results = []#qua vengono salvati i risultati ( lista di dizionari)
         self.sell_results = []
@@ -45,11 +46,12 @@ class Engine:
             self.results[strategy_name]["timestamp"]=self.last_timestamp
             if next_strategy:
                 self.buy_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
+        self.data_extractor.updated_file=""
     
     
     def findSellSignal(self, strategy):
         print("chiamata sell signal, riga 50")
-        self.last_timestamp=0
+#        self.last_timestamp=0
         count = 1
         next_strategy = True
         while next_strategy==True:
@@ -60,7 +62,9 @@ class Engine:
             self.results[strategy_name]["timestamp"]=self.last_timestamp
             if next_strategy:
                 self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
-    
+        self.data_extractor.updated_file=""
+        
+        
     def buyAndWait(self, strategy, time_distance):
         all_rows=[]
         self.last_timestamp=0
@@ -108,6 +112,7 @@ class Engine:
                     print(row)
                     break
         
+        self.data_extractor.updated_file=""
         return sell_signals
                     
     
@@ -164,9 +169,20 @@ class Engine:
         print("saving results, riga 80")
         with open(self.name+".json", "w") as f:
             json.dump(self.results, f)
-        return self.name+".json"
-        
-
+ 
+        with open(self.name+"_buy_results.txt", "w") as f:
+            for x in self.buy_results:
+                f.write(str(x))       
+            
+        with open(self.name+"_sell_results.txt", "w") as f:
+            for x in self.sell_results:
+                f.write(str(x))      
+            
+        with open(self.name+"_compared.txt", "w") as f:
+            for x in self.completed_strategies:
+                f.write(str(x))
+     
+        return self.name+".json",self.name+"_compared.txt"
     
 class Strategy:
     
@@ -181,6 +197,8 @@ class Strategy:
     def searchSignal(self, last_timestamp, count):
         self.results={}
         count_layer=1
+#        self.final_timestamp=0
+        
         print("chiamata strategia N."+str(count))
         for layer in self.layers:
             self.results["layer"+str(count_layer)] = []
@@ -192,16 +210,20 @@ class Strategy:
             for method in layer:
                 print("la strategia N."+str(count)+" chiama un metodo, riga 111")
                 validity, result, timestamp = method.execute(actual_timestamp)
+#                if int(timestamp)>int(self.final_timestamp):
+#                    self.final_timestamp=timestamp
+                    
                 if validity:
                     check_if_true=True
                 first_method.append((int(timestamp), result))
-                print("il metodo chiamato dalla strategia N "+str(count)+" ha restituito:, riga 113")
+                print("il metodo chiamato dalla strategia N "+str(count)+" ha restituito:, riga 201")
                 print(validity, result, timestamp)
 #                self.results["layer"+str(count)].append(result)
                 new_timestamp = result["timestamp"]
-            if int(new_timestamp)>int(last_timestamp):
-                last_timestamp=new_timestamp
-                print("e' stato aggiornato il timestamp, riga 119")
+                
+                if int(new_timestamp)>int(last_timestamp) and validity:
+                    last_timestamp=new_timestamp
+                    print("e' stato aggiornato il timestamp, riga 119")
                     
             if not check_if_true:
                 print("la strategia N "+str(count)+" ha ricevuto un valore finale negativo, torna false, riga 117")
@@ -251,9 +273,14 @@ class PriceCross():
             if i>=len(self.ind1)  or len(self.ind1)<=1 or i>=len(self.ind2):
                 timestamp = self.indicator1.diz2["timestamp"][i-1]
                 print("il metodo restituisce false, riga 175")
-                return False, {"result": "{} didn´t cross {} -- timeperiod: {}".format(self.indicator1.name, self.indicator2.name, self.TP), "timestamp": self.indicator1.diz2["timestamp"][i-1]}, timestamp
+                return False, {"result": "{} didn´t cross {} -- timeperiod: {}".format(self.indicator1.name, self.indicator2.name, self.TP), 
+                               "timestamp": self.indicator1.diz2["timestamp"][i-1],
+                               "ind1":self.indicator1.name, 
+                               "ind2":self.indicator2.name,
+                               "timeperiod":self.TP,
+                               "method-name": "Price Cross"}, timestamp
             
-            if  self.ind1[i-1]-self.ind2[i-1] < 0 and self.ind1[i]-self.ind2[i] > 0 and self.crossType=="above":
+            if  self.ind1[i-1]-self.ind2[i-1] < 0 and self.ind1[i]-self.ind2[i] >= 0 and self.crossType=="above":
                 diz = {"ind1":self.indicator1.name, 
                        "ind2":self.indicator2.name, 
                        "timeperiod":self.TP,
@@ -266,7 +293,7 @@ class PriceCross():
                 print("il metodo restituisce true, riga 187")
                 return True, diz, timestamp          #torna true se ind1 passa sopra a ind2
             
-            if  self.ind1[i-1]-self.ind2[i-1] > 0 and self.ind1[i]-self.ind2[i] < 0 and self.crossType=="below":
+            if  self.ind1[i-1]-self.ind2[i-1] > 0 and self.ind1[i]-self.ind2[i] <= 0 and self.crossType=="below":
                 diz = {"ind1":self.indicator1.name, 
                        "ind2":self.indicator2.name,
                        "timeperiod":self.TP,
@@ -277,18 +304,18 @@ class PriceCross():
                        "timestamp": self.indicator1.diz2["timestamp"][i]}      
                 timestamp = self.indicator1.diz2["timestamp"][i]
                 print("il metodo restituisce true, riga 199")
-                return True, diz, timestamp       #torna flase se ind1 passa sotto a ind2 (ovvero ind2 passa sopra a ind1)
+                return True, diz, timestamp       #torna false se ind1 passa sotto a ind2 (ovvero ind2 passa sopra a ind1)
             i+=1
             
         
 
 class SMAClass:
-    def __init__(self, data_extractor, timeperiod):
+    def __init__(self, data_extractor):
         
-        self.timeperiod = timeperiod
+        self.timeperiod = 30
         self.data_extractor = data_extractor
         self.values = np.zeros(1)
-        self.name = "SMA indicator"+str(timeperiod)
+        self.name = "SMA indicator "#+str(timeperiod)
         self.data_list = data_extractor.data
         self.value_type="close"
        # self.diz= self.setDataList()
@@ -296,6 +323,9 @@ class SMAClass:
         
           
     def getData(self, timestamp, TP):
+#        self.timeperiod=TP
+        TP=int(TP)
+#        self.name+=" "+str(self.timeperiod)
         print("metodo getData dell indicatore, riga 221")
         if int(timestamp) > int(self.data_extractor.timestamp):
             print("aggiornato timestamp: vecchio="+str(timestamp)+" nuovo=")
@@ -305,6 +335,8 @@ class SMAClass:
             print("il timestamp non è maggiore, riga 228")
             print(str(timestamp)+"   "+str(self.data_extractor.timestamp))
         filename=self.data_extractor.updated_file
+        print("controllo nome file in getData")
+        print(self.data_extractor.updated_file)
         if filename == "":
             filename=self.data_extractor.file
         print("il file da cui generare le candele ha nome: , riga 234")
@@ -387,6 +419,7 @@ class SMAClass:
             
             print("salva il diz2")
             self.diz2=diz
+#            print(diz)
             return diz, timestamp
         
     def setDataList(self):
@@ -426,11 +459,11 @@ class SMAClass:
         return self.values
     
     def getOutput2(self):
-        print("è stato chiamato getOutput2, riga 337")
-        
+        print("è stato chiamato getOutput2, riga 433")
+#        print(self.diz2[self.value_type])
         self.values = tl.SMA(self.diz2[self.value_type], timeperiod=self.timeperiod)
-        print("queste sono le values restituite dell indicatore:, riga 340")
-        print(self.values)
+#        print("queste sono le values restituite dell indicatore:, riga 436")
+#        print(self.values)
         return self.values
 
 
@@ -456,20 +489,30 @@ class DataExtractor:
 
         try:
             with open(self.file, "r") as f:
-                f.readline()
-                line=f.readline()
-                ts=float(line.split(",")[0])
+                print(self.file)
+                print(f.readline())
+                line=f.readline()#.strip()
+                ts=line.split(",")[0]
+                ts=float(ts.replace("\"", ""))
                 while ts<self.ts_start:
-                    line=f.readline()
-                    ts=float(line.split(",")[0])
+                    line=f.readline()#.strip()
+#                    ts=float(line.split(",")[0])
+#                    print("stampa linea in setFile: --> "+line)
+                    ts=line.split(",")[0]
+                    ts=float(ts.replace("\"", ""))
                 print("trovato inizio")
-                with open("new_file.csv", "w") as nf:
-                    while ts<=self.ts_end:
-                        nf.write(line)
+                with open(self.filename, "w") as nf:
+                    while ts<self.ts_end-1:
+                        nf.write(line.replace("\\n", ""))
                         line=f.readline()
-                        ts=float(line.split(",")[0])
-                    print("creato new_file.csv")          
+                        ts=line.split(",")[0]
+#                        print(ts)
+                        ts=float(ts.replace("\"", ""))
+                    print("creato "+self.filename)      
+            self.file=self.filename
         except:
+            traceback.print_exc()
+            print("errore nella creazione del file")
             return False
         
         return True
@@ -485,15 +528,15 @@ class DataExtractor:
             print("prima volta, apro il file principale, riga 380")
             filename=self.file
         else:
-            filename="updated_file.json"
-            self.updated_file="updated_file.json"
+            filename="updated_file.csv"
+            self.updated_file="updated_file.csv"
             print("è stato aggiornato il nome del file a upgrade_file.json, riga 385")
         print("apro il file "+filename)
         with open(filename) as f:            
             line = f.readline()
-            if line.split(",")[0]=="":
+            if line.split(",")[0].replace("\"","")=="":
                 return self.timestamp
-            actual_timestamp = (line.split(",")[0])
+            actual_timestamp = (line.split(",")[0].replace("\"",""))
             actual_timestamp=int(actual_timestamp)
             print("sta leggendo il file, riga 395")
             print("timestamp trasmesso:, riga 396")
@@ -504,10 +547,10 @@ class DataExtractor:
                 line = f.readline()
     #                if line=="":
     #                    break
-                actual_timestamp = int(line.split(",")[0])  
+                actual_timestamp = int(line.split(",")[0].replace("\"",""))  
             
-            data=f.readlines()
-    
+#            data=f.readlines()
+            data=f.read()
             print("file letto")
             print("timestamp a fine lettura:, riga 409")
             print(actual_timestamp)
@@ -515,13 +558,14 @@ class DataExtractor:
             print("timestamp aggiornato, riga 412")
             print("grandezza del data estratto dal file: , riga 413:")
             print(len(data))
-        self.updated_file="updated_file.json"
-        filename="updated_file.json"
+        self.updated_file="updated_file.csv"
+        filename="updated_file.csv"
         with open(filename, "w") as f:
             print("sta scrivendo il file, riga 418")
             print(filename)
             for x in data:
                 f.write(x)
+#            f.write(data)
             print("è stato scritto il file, linea 422")
         return self.timestamp#self.updated_file#, end
         
@@ -530,6 +574,7 @@ class DataExtractor:
         print("chiamato createTPFfromRawFile")
         if not "TP"+str(tpValue) in self.TP_files or int(timestamp)>=int(self.timestamp):
 #            self.timestamp=timestamp
+            
             json_content={}
             csv_content = [["timestamp","date","open","close","high","low","volume","average","direction"]]
             print("apertura del file principale, nome file: , riga 439") 
@@ -537,16 +582,24 @@ class DataExtractor:
             with open(file) as f:
                 candle_data = []      
                 first_line=f.readline()
+#                first_line=first_line.replace("\"\n","")
                 data = first_line.split(",")
-                last_timestamp = data[0] 
+#                print(data)
+                last_timestamp = data[0].replace("\"", "")
+                
 #                date = datetime.fromtimestamp(int(last_timestamp))
-                candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
+                candle_data.append({"timestamp":last_timestamp, "price":data[1], "amount":data[2]})
+#                print(candle_data)
                 json_content["TP"+str(tpValue)] = []    
                 
-                for i, line in enumerate(f):
-                    data = line.split(",")
+                for line in f:
+#                    line=line.replace("\"","")
+#                    line=line.replace("\\n","")
+#                    print(line)
+                    data = line.replace("\"", "").split(",")
+#                    data = data[0]
                     actual_timestamp=data[0]
-                    actual_tp = (float(actual_timestamp) - float(last_timestamp))/60 #number of minutes
+                    actual_tp = (int(actual_timestamp) - int(last_timestamp))/60 #number of minutes
                     checkTP = actual_tp / tpValue
                     
                     if checkTP>=1:   #se é il momento di creare una candela
@@ -557,10 +610,10 @@ class DataExtractor:
                         candle_data.clear()
     
                     candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
-            print("il file principale è stato trasformato in candele, riga 462")
+            print("il file principale è stato trasformato in candele, riga 587")
             with open("TP"+str(tpValue)+".json", 'w', encoding='utf-8') as json_file:
                 json.dump(json_content, json_file, ensure_ascii=False, indent=4)              #salva il file
-                print("le candele sono stata scritte in un nuovo file, riga 465")
+                print("le candele sono state scritte in un nuovo file, riga 589")
                 print("TP"+str(tpValue)+".json")
             self.TP_files["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
             
@@ -651,7 +704,7 @@ class DataExtractor:
         for trade in candle_data:
             
             price = float(trade["price"])
-            amount = float(trade["amount"])
+            amount = float(trade["amount"].strip().replace("\"", ""))
             volume+=amount
             sum_of_prices+=price
             numb_of_trades+=1
@@ -785,7 +838,9 @@ def drawResults(file, operation):
 #    np_array = np.array(a)  
     np_array = np.array(draw_array)
     plt.plot(np_array)
+    plt.savefig(operation+".png", dpi = 300)
     plt.show()
+    
 
         
 
@@ -966,97 +1021,97 @@ class VolumeBlock:
         self.candles = []
 
 
-if __name__ == "__main__":
-    
-#crea il data_extractor
-    
-    data_extractor = DataExtractor("test.csv")
-
-#crea strategie
-
-    sma = SMAClass(data_extractor, 30)
-    sma.value_type="low"
-    
-    sma2 = SMAClass(data_extractor, 20)
-    sma2.value_type="low"
-    
-    sma3 = SMAClass(data_extractor, 100)
-    sma3.value_type="low"
-    
-    sma4 = SMAClass(data_extractor, 50)
-    sma4.value_type="low" 
-    
-    met1 = PriceCross(sma, sma2, "above", 100)
-    met2 = PriceCross(sma2, sma3, "above", 50)
-    met3 = PriceCross(sma3, sma4, "above", 100)
-    
-    layer1 = {met1, met2}
-    layer2 = {met3}
-    
-    strategy = Strategy([layer1,layer2])
-    
-    
-    
-    
-#    data_extractor = DataExtractor("test.csv")
+#if __name__ == "__main__":
+#
+##crea il data_extractor
+#
+#data_extractor = DataExtractor("test.csv")
 #
 ##crea strategie
 #
-    sma = SMAClass(data_extractor, 30)
-    sma.value_type="low"
-    sma.timeperiod=30
-    
-    sma2 = SMAClass(data_extractor, 20)
-    sma2.value_type="low"
-    sma2.timeperiod=20
-#    
-#    sma3 = SMAClass(data_extractor, 100)
-#    sma3.value_type="low"
-#    sma3.timeperiod=100
-#    
-#    sma4 = SMAClass(data_extractor, 50)
-#    sma4.value_type="low"
-#    sma4.timeperiod=50 
-#    met4 = PriceCross(sma, sma2, "below", 20)
-#    met5 = PriceCross(sma2, sma3, "above", 50)
-#    met6 = PriceCross(sma3, sma4, "below", 30)
-#    
-#    layer3 = {met4, met5}
-#    layer4 = {met6}
-#    
-#    strategy2 = Strategy([layer3,layer4])
-    
-#    engine = Engine("motore1", data_extractor)
-#    
-#    lista = engine.buyAndWait(strategy, 9432000)
-  
-#    engine.findBuySignal(strategy)
-#    print(engine.results)
-#    nome_file = engine.saveResults()
-    
-#    
-#    lista = engine.findSellSignal(strategy2)
-#    print(lista)
-#    print(engine.results)
-#    nome_file = engine.saveResults()
-#    drawResults("motore1.json", "buy")
-#    drawResults("motore1.json", "sell")
-#    data_extractor.createFile("test3.csv", 1440)
-#    
-#    
-#    engine.compareBuyAndSell()
-#    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
-#    print(engine.completed_strategies)
-#    print("BUY")
-#    print(engine.buy_results)
-#    print("SELL")
-#    print(engine.sell_results)
-#    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+#sma = SMAClass(data_extractor, 30)
+#sma.value_type="low"
 #
-#    
-    volume2=VolumeExtractor(data_extractor, 1440,20)
-    volume2.getData()
-    volume2.createGroups()
-    lista, lista_time=volume2.convertToNP()
-    volume2.printGraph(lista)
-    print(len(volume2.volume_blocks))
+#sma2 = SMAClass(data_extractor, 20)
+#sma2.value_type="low"
+#
+#sma3 = SMAClass(data_extractor, 100)
+#sma3.value_type="low"
+#
+#sma4 = SMAClass(data_extractor, 50)
+#sma4.value_type="low" 
+#
+#met1 = PriceCross(sma, sma2, "above", 100)
+#met2 = PriceCross(sma2, sma3, "above", 50)
+#met3 = PriceCross(sma3, sma4, "above", 100)
+#
+#layer1 = {met1, met2}
+#layer2 = {met3}
+#
+#strategy = Strategy([layer1,layer2])
+#
+#
+#
+#
+##    data_extractor = DataExtractor("test.csv")
+##
+###crea strategie
+##
+#sma = SMAClass(data_extractor, 30)
+#sma.value_type="low"
+#sma.timeperiod=30
+#
+#sma2 = SMAClass(data_extractor, 20)
+#sma2.value_type="low"
+#sma2.timeperiod=20
+##    
+##    sma3 = SMAClass(data_extractor, 100)
+##    sma3.value_type="low"
+##    sma3.timeperiod=100
+##    
+##    sma4 = SMAClass(data_extractor, 50)
+##    sma4.value_type="low"
+##    sma4.timeperiod=50 
+##    met4 = PriceCross(sma, sma2, "below", 20)
+##    met5 = PriceCross(sma2, sma3, "above", 50)
+##    met6 = PriceCross(sma3, sma4, "below", 30)
+##    
+##    layer3 = {met4, met5}
+##    layer4 = {met6}
+##    
+##    strategy2 = Strategy([layer3,layer4])
+#
+##    engine = Engine("motore1", data_extractor)
+##    
+##    lista = engine.buyAndWait(strategy, 9432000)
+#  
+##    engine.findBuySignal(strategy)
+##    print(engine.results)
+##    nome_file = engine.saveResults()
+#
+##    
+##    lista = engine.findSellSignal(strategy2)
+##    print(lista)
+##    print(engine.results)
+##    nome_file = engine.saveResults()
+##    drawResults("motore1.json", "buy")
+##    drawResults("motore1.json", "sell")
+##    data_extractor.createFile("test3.csv", 1440)
+##    
+##    
+##    engine.compareBuyAndSell()
+##    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+##    print(engine.completed_strategies)
+##    print("BUY")
+##    print(engine.buy_results)
+##    print("SELL")
+##    print(engine.sell_results)
+##    print("ùùùùùùùùùùùùùùùùùùùùùùùùùùù")
+##
+##    
+#volume2=VolumeExtractor(data_extractor, 1440,20)
+#volume2.getData()
+#volume2.createGroups()
+#lista, lista_time=volume2.convertToNP()
+#volume2.printGraph(lista)
+#print(len(volume2.volume_blocks))
