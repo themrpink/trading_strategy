@@ -348,103 +348,33 @@ class SMAClass:
         print("apri il file "+ "TP"+str(TP)+".json nell indicatore, riga 239")
         print("file size, rga 240")
         print(str(os.path.getsize("TP"+str(TP)+".json")))
-        with open("TP"+str(TP)+".json") as f:
-            data = json.load(f)
-#            print(data)
-            n=len(data["TP"+str(TP)])
-            print(n)
-            i=0
-#            diz ={"date": np.empty(), 
-#                  "timestamp": np.zeros(n),
-#                  "open":np.zeros(n),
-#                  "close":np.zeros(n), 
-#                  "high":np.zeros(n), 
-#                  "low":np.zeros(n), 
-#                  "volume":np.zeros(n), 
-#                  "average":np.zeros(n),
-#                  "direction":np.zeros(n)}
-            diz ={"date": [], 
-                  "timestamp": [],
-                  "open": [],
-                  "close":[], 
-                  "high": [], 
-                  "low": [], 
-                  "volume": [], 
-                  "average": [],
-                  "direction": []}
-            print("aggiungi i valori dell indicatore nei numpy arrays, riga 245")
-            for candle in data["TP"+str(TP)]:
-#                print(candle)
-#                print(candle["date"])
-#                np.append(diz["date"], candle["date"])
-#                np.append(diz["timestamp"], candle["timestamp"])
-#                np.append(diz["open"], candle["open"])
-#                np.append(diz["close"], candle["close"])
-#                np.append(diz["low"], candle["low"])
-#                np.append(diz["high"], candle["high"])
-#                np.append(diz["volume"], candle["volume"])
-#                np.append(diz["average"], candle["average"])
-#                np.append(diz["direction"], candle["direction"])
-                diz["date"].append(candle["date"])
-                diz["timestamp"].append(float(candle["timestamp"]))
-                diz["open"].append(float(candle["open"]))
-                diz["close"].append(float(candle["close"]))
-                diz["low"].append(float(candle["low"]))
-                diz["volume"].append(float(candle["volume"]))
-                diz["average"].append(float(candle["average"]))
-                diz["direction"].append(float(candle["direction"]))
-                
-
-#                diz["date"].flat[i]=candle["date"]
-#                diz["timestamp"].flat[i]=candle["timestamp"]
-#                diz["open"].flat[i]=float(candle["open"])
-#                diz["close"].flat[i]=(float(candle["close"]))
-#                diz["low"].flat[i]=(float(candle["low"]))
-#                diz["volume"].flat[i]=(float(candle["volume"]))
-#                diz["average"].flat[i]=(float(candle["average"]))
-#                diz["direction"].flat[i]=(float(candle["direction"]))
-                i+=1  
-            print("converti in numpy array - inizio, riga 293")        
-            diz["date"]=np.array(diz["date"])
-            diz["timestamp"]=np.array(diz["timestamp"])
-            diz["open"]=np.array(diz["open"])
-            diz["close"]=np.array(diz["close"])
-            diz["low"]=np.array(diz["low"])
-            diz["volume"]=np.array(diz["volume"])
-            diz["average"]=np.array(diz["average"])
-            diz["direction"]=np.array(diz["direction"])
-            print("converti in numpy array - fine, riga 301")
-            print("crea il file myarray.csv, riga 302")
-            np.savetxt("myArray.csv", diz["open"])
-            
-            print("salva il diz2")
-            self.diz2=diz
-#            print(diz)
-            return diz, timestamp
-        
-    def setDataList(self):
-#        self.data_list=data
-          
-        n=len(self.data_list)
-        diz ={"date": np.zeros(n), 
-              "timestamp": np.zeros(n),
-              "open":np.zeros(n),
-              "close":np.zeros(n), 
-              "high":np.zeros(n), 
-              "low":np.zeros(n), 
-              "volume_btc":np.zeros(n), 
-              "volume_usd":np.zeros(n)}
-        i=0
-        for x in self.data_list:
-            #diz["date"].flat[i]=x.get("date")
-            diz["timestamp"].flat[i]=(float(x.get("timestamp")))
-            diz["open"].flat[i]=(float(x.get("open")))
-            diz["close"].flat[i]=(float(x.get("close")))
-            diz["low"].flat[i]=(float(x.get("low")))
-            diz["volume_btc"].flat[i]=(float(x.get("volume_btc")))
-            diz["volume_usd"].flat[i]=(float(x.get("volume_usd")))
-            i+=1
-        return diz
+        c = CandleExtractor("TP"+str(TP)+".json")
+        self.diz2, timestamp=c.creaDiz( TP, timestamp)
+        return self.diz2, timestamp
+    
+#    def setDataList(self):
+##        self.data_list=data
+#          
+#        n=len(self.data_list)
+#        diz ={"date": np.zeros(n), 
+#              "timestamp": np.zeros(n),
+#              "open":np.zeros(n),
+#              "close":np.zeros(n), 
+#              "high":np.zeros(n), 
+#              "low":np.zeros(n), 
+#              "volume_btc":np.zeros(n), 
+#              "volume_usd":np.zeros(n)}
+#        i=0
+#        for x in self.data_list:
+#            #diz["date"].flat[i]=x.get("date")
+#            diz["timestamp"].flat[i]=(float(x.get("timestamp")))
+#            diz["open"].flat[i]=(float(x.get("open")))
+#            diz["close"].flat[i]=(float(x.get("close")))
+#            diz["low"].flat[i]=(float(x.get("low")))
+#            diz["volume_btc"].flat[i]=(float(x.get("volume_btc")))
+#            diz["volume_usd"].flat[i]=(float(x.get("volume_usd")))
+#            i+=1
+#        return diz
         
     def storeData(self):
         with open("store.json", "w") as f:
@@ -467,7 +397,66 @@ class SMAClass:
         return self.values
 
 
+class CandleExtractor:
+    def __init__(self, filename):
+        self.filename=filename
+#        self.TP=TP
+#        self.timestamp=timestamp
+        self.diz2={}
+#        self.creaDiz(self.TP, self.timestamp)
+        
+    def creaDiz(self, TP, timestamp):
+        with open("TP"+str(TP)+".json") as f:
+            data = json.load(f)
+#            print(data)
+            n=len(data["TP"+str(TP)])
+            print(n)
+            i=0
 
+            diz ={"date": [], 
+                  "timestamp": [],
+                  "open": [],
+                  "close":[], 
+                  "high": [], 
+                  "low": [], 
+                  "volume": [], 
+                  "average": [],
+                  "direction": []}
+            print("aggiungi i valori dell indicatore nei numpy arrays, riga 245")
+            for candle in data["TP"+str(TP)]:
+                diz["date"].append(candle["date"])
+                diz["timestamp"].append(float(candle["timestamp"]))
+                diz["open"].append(float(candle["open"]))
+                diz["close"].append(float(candle["close"]))
+                diz["low"].append(float(candle["low"]))
+                diz["volume"].append(float(candle["volume"]))
+                diz["average"].append(float(candle["average"]))
+                diz["direction"].append(float(candle["direction"]))
+                
+
+                i+=1  
+            print("converti in numpy array - inizio, riga 293")        
+            diz["date"]=np.array(diz["date"])
+            diz["timestamp"]=np.array(diz["timestamp"])
+            diz["open"]=np.array(diz["open"])
+            diz["close"]=np.array(diz["close"])
+            diz["low"]=np.array(diz["low"])
+            diz["volume"]=np.array(diz["volume"])
+            diz["average"]=np.array(diz["average"])
+            diz["direction"]=np.array(diz["direction"])
+            print("converti in numpy array - fine, riga 301")
+            print("crea il file myarray.csv, riga 302")
+            np.savetxt("myArray.csv", diz["open"])
+            
+            print("salva il diz2")
+            self.diz2=diz
+#            print(diz)
+            return diz, timestamp
+         
+        
+        
+        
+        
 class DataExtractor:
     def __init__(self, file, ts_start=0, ts_end=0, filename="new_file.csv"):
         self.file=file

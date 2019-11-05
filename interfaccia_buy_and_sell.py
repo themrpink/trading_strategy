@@ -12,7 +12,7 @@ from functools import partial
 import time
 import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import user_account
 
 #data_extractor=engine.DataExtractor("")#.Data_extractor()
 
@@ -29,6 +29,14 @@ class Ui_MainWindow(object):
         self.data_extractor=""
         self.engine=""
         self.filename=""
+        
+        #account
+        self.user = user_account.User()
+        self.saldo=0
+        self.investimento=0
+        self.investimento_perc=0
+        self.commissioni=0
+    
         
         #parte crea layers
         self.layers_buy = []
@@ -95,7 +103,7 @@ class Ui_MainWindow(object):
         
         #inizia tab
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabWidget.setGeometry(QtCore.QRect(440, 40, 891, 851))
+        self.tabWidget.setGeometry(QtCore.QRect(440, 40, 891, 902))
         self.tabWidget.setObjectName("tabWidget")        
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -316,10 +324,29 @@ class Ui_MainWindow(object):
         self.pushButton_11 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_11.setGeometry(QtCore.QRect(1640, 280, 141, 21))
         self.pushButton_11.setObjectName("pushButton_11")
-        self.tableView = QtWidgets.QTableView(self.centralwidget)
-        self.tableView.setGeometry(QtCore.QRect(1380, 360, 401, 411))
-        self.tableView.setObjectName("tableView")
-        
+#        self.tableView = QtWidgets.QTableView(self.centralwidget)
+#        self.tableView.setGeometry(QtCore.QRect(1380, 360, 401, 411))
+#        self.tableView.setObjectName("tableView")
+        #tabella BUY
+        self.tableWidget5 = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableWidget5.setGeometry(QtCore.QRect(1380, 420, 481, 581))
+        self.tableWidget5.setLineWidth(1)
+        self.tableWidget5.setAutoScroll(True)
+        self.tableWidget5.setProperty("showDropIndicator", True)
+        self.tableWidget5.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
+        self.tableWidget5.setShowGrid(True)
+        self.tableWidget5.setCornerButtonEnabled(True)
+        self.tableWidget5.setColumnCount(4)
+        self.tableWidget5.setObjectName("tableWidget")
+        self.tableWidget5.setRowCount(0)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(1, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(2, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(3, item)        
         ###fine  user account
         
         
@@ -472,6 +499,32 @@ class Ui_MainWindow(object):
         
         self.pushButton.clicked.connect(self.lauchStrategy)
     
+    
+        #user account 
+        self.pushButton_9.clicked.connect(self.changeSaldo)
+        self.pushButton_10.clicked.connect(self.changeInvestimento)
+        self.pushButton_11.clicked.connect(self.changeCommissioni)
+        
+    def changeSaldo(self):
+        self.saldo= self.lineEdit_6.text()
+        self.user.saldo= self.lineEdit_6.text()
+        self.label_16.setText(self.lineEdit_6.text())
+        
+    def changeInvestimento(self):
+        self.investimento= self.lineEdit_7.text()
+        self.label_17.setText(self.lineEdit_7.text())  
+        if self.radioButton.isChecked():
+            self.label_17.setText(self.lineEdit_7.text()+"%")  
+            self.investimento_perc= self.lineEdit_7.text()            
+        else:
+            self.investimento= self.lineEdit_7.text()
+            self.label_17.setText(self.lineEdit_7.text())      
+        self.user.investimento=self.lineEdit_7.text()
+         
+    def changeCommissioni(self):
+        self.commissioni= self.lineEdit_8.text()
+        self.user.commissioni= self.lineEdit_8.text()
+         
     def checkFile(self):
         try:
             with open(self.filename, "r") as f:
@@ -519,12 +572,19 @@ class Ui_MainWindow(object):
         self.engine.compareBuyAndSell()
         filename, compared =self.engine.saveResults()
         engine.drawResults(filename, "buy")
+#        engine.drawResults(filename, "buy")
 #        engine.drawResults(buy, "buy")  
 #        self.data_extractor.file=self.filename
-        self.engine.last_timestamp=self.date_start
-        self.data_extractor.timestamp=self.date_start
+        
+        self.user.calcola(self.engine.completed_strategies,self.filename)
         self.setDataTables()
-    
+        
+        self.engine.last_timestamp=self.date_start
+        self.engine.buy_results=[]
+        self.engine.sell_results=[]
+        self.engine.compareBuyAndSell=[]
+        self.data_extractor.timestamp=self.date_start      
+
     
     def setDataTables(self):
 
