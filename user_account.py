@@ -11,6 +11,7 @@ class User:
         self.name = ""
         self.saldo = 0
         self.operations = []
+        self.risultati=[]
         self.ricavi=[]
         self.win = []
         self.lose = []
@@ -19,6 +20,7 @@ class User:
         self.valuta="euro"
         self.investimento=0
         self.commissioni=0
+        self.dati_result=[]    
         
         
     def calcola(self, dati, file):
@@ -26,7 +28,6 @@ class User:
         indice_sell=0
         dati.sort(key=lambda x:(x[0], x[1]))
         print(dati)
-        self.dati_result=[]
         for x in dati:
             self.dati_result.append([])
         with open(file, "r") as f:

@@ -44,8 +44,8 @@ class Engine:
             count+=1
             self.results[strategy_name]=result
             self.results[strategy_name]["timestamp"]=self.last_timestamp
-            if next_strategy:
-                self.buy_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
+#            if next_strategy:
+            self.buy_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy, "strategy":strategy_name})
         self.data_extractor.updated_file=""
     
     
@@ -60,8 +60,8 @@ class Engine:
             count+=1
             self.results[strategy_name]=result
             self.results[strategy_name]["timestamp"]=self.last_timestamp
-            if next_strategy:
-                self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy})
+#            if next_strategy:
+            self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy, "strategy":strategy_name})
         self.data_extractor.updated_file=""
         
         
@@ -73,22 +73,23 @@ class Engine:
         print(file)
         sell_timeframes=[]
         for result in self.buy_results:
-            timestamp = int(result["timestamp"])
-#            print(timestamp)
-            with open (file, "r") as f:
-                 csv_reader = csv.reader(f, delimiter=',')
-                 for row in csv_reader:
-#                     print(row)
-                     if int(row[0])>=timestamp:
-                         print(timestamp)
-                         buy_price=float(row[1])  #questi buy price devo salvarli per poi associarli con il sell price finale
-                         print(buy_price)
-                         tuple_list, rows = self.wait(buy_price, timestamp, file, timestamp+time_distance)
-#                         print("stampo i risultati ri riga 77")
-#                         print(tuple_list, rows)
-                         sell_timeframes.append(tuple_list)
-                         all_rows.append(rows)
-                         break
+            if result["succeded"]:
+                timestamp = int(result["timestamp"])
+    #            print(timestamp)
+                with open (file, "r") as f:
+                     csv_reader = csv.reader(f, delimiter=',')
+                     for row in csv_reader:
+    #                     print(row)
+                         if int(row[0])>=timestamp:
+                             print(timestamp)
+                             buy_price=float(row[1])  #questi buy price devo salvarli per poi associarli con il sell price finale
+                             print(buy_price)
+                             tuple_list, rows = self.wait(buy_price, timestamp, file, timestamp+time_distance)
+    #                         print("stampo i risultati ri riga 77")
+    #                         print(tuple_list, rows)
+                             sell_timeframes.append(tuple_list)
+                             all_rows.append(rows)
+                             break
 #        print(sell_timeframes)
 #        print(all_rows)
         tot_price=0
@@ -156,12 +157,14 @@ class Engine:
     
     def compareBuyAndSell(self):
         for buy_signal in self.buy_results:
-            timestamp_buy = buy_signal["timestamp"]
-            for sell_signal in self.sell_results:
-                timestamp_sell = sell_signal["timestamp"]
-                if timestamp_sell>=timestamp_buy:
-                   self.completed_strategies.append((timestamp_buy, timestamp_sell))
-                   break
+            if buy_signal["succeded"]:
+                timestamp_buy = buy_signal["timestamp"]
+                for sell_signal in self.sell_results:
+                    if sell_signal["succeded"]:
+                        timestamp_sell = sell_signal["timestamp"]
+                        if timestamp_sell>=timestamp_buy:
+                           self.completed_strategies.append((timestamp_buy, timestamp_sell))
+                           break
     
 
             
@@ -273,7 +276,7 @@ class PriceCross():
             if i>=len(self.ind1)  or len(self.ind1)<=1 or i>=len(self.ind2):
                 timestamp = self.indicator1.diz2["timestamp"][i-1]
                 print("il metodo restituisce false, riga 175")
-                return False, {"result": "{} didn´t cross {} -- timeperiod: {}".format(self.indicator1.name, self.indicator2.name, self.TP), 
+                return False, {"result": "{} didn´t cross {}".format(self.indicator1.name, self.indicator2.name), 
                                "timestamp": self.indicator1.diz2["timestamp"][i-1],
                                "ind1":self.indicator1.name, 
                                "ind2":self.indicator2.name,
@@ -286,7 +289,7 @@ class PriceCross():
                        "timeperiod":self.TP,
                        "time-index":i, 
                        "method-name": "Price Cross", 
-                       "result": "{} crossed above {} ".format(self.indicator1.name, self.indicator2.name),
+                       "result": "{} crossed above {}".format(self.indicator1.name, self.indicator2.name),
                      #  "date": self.indicator1.diz["date"].item(i),
                        "timestamp": self.indicator1.diz2["timestamp"][i]}
                 timestamp = self.indicator1.diz2["timestamp"][i]

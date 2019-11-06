@@ -104,7 +104,7 @@ class Ui_MainWindow(object):
         
         #inizia tab
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabWidget.setGeometry(QtCore.QRect(440, 40, 891, 902))
+        self.tabWidget.setGeometry(QtCore.QRect(440, 40, 1391, 902))
         self.tabWidget.setObjectName("tabWidget")        
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
@@ -118,7 +118,7 @@ class Ui_MainWindow(object):
         self.pushButton_4.setGeometry(QtCore.QRect(470, 330, 93, 28))
         self.pushButton_4.setObjectName("pushButton_4")
         
-        #tabella BUY
+        #tabella BUY layers
         self.tableWidget = QtWidgets.QTableWidget(self.tab)
         self.tableWidget.setGeometry(QtCore.QRect(140, 50, 631, 251))
         self.tableWidget.setLineWidth(1)
@@ -157,12 +157,33 @@ class Ui_MainWindow(object):
         self.pushButton_2.setGeometry(QtCore.QRect(360, 330, 93, 28))
         self.pushButton_2.setObjectName("pushButton_2")
         
-
+        #tabella buy risultati
         self.tableWidget_2 = QtWidgets.QTableWidget(self.tab)
         self.tableWidget_2.setGeometry(QtCore.QRect(140, 490, 631, 251))
         self.tableWidget_2.setObjectName("tableWidget_2")
-        self.tableWidget_2.setColumnCount(0)
         self.tableWidget_2.setRowCount(0)
+        self.tableWidget_2.setLineWidth(1)
+        self.tableWidget_2.setAutoScroll(True)
+        self.tableWidget_2.setProperty("showDropIndicator", True)
+        self.tableWidget_2.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
+        self.tableWidget_2.setShowGrid(True)
+        self.tableWidget_2.setCornerButtonEnabled(True)
+        self.tableWidget_2.setColumnCount(4)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_2.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_2.setHorizontalHeaderItem(1, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_2.setHorizontalHeaderItem(2, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_2.setHorizontalHeaderItem(3, item)    
+        header = self.tableWidget_2.horizontalHeader()       
+#        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents) 
+        
         
         self.label = QtWidgets.QLabel(self.tab)
         self.label.setGeometry(QtCore.QRect(430, 20, 55, 16))
@@ -184,7 +205,7 @@ class Ui_MainWindow(object):
         self.pushButton_5.setGeometry(QtCore.QRect(470, 330, 93, 28))
         self.pushButton_5.setObjectName("pushButton_5")
         
-        #tabella SELL
+        #tabella SELL layers
         self.tableWidget_3 = QtWidgets.QTableWidget(self.tab_2)
         self.tableWidget_3.setGeometry(QtCore.QRect(140, 50, 631, 251))
         self.tableWidget_3.setLineWidth(1)
@@ -205,6 +226,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_3.setHorizontalHeaderItem(3, item)
         self.tableWidget_3.verticalHeader().setHighlightSections(True)
+        
         self.label_9 = QtWidgets.QLabel(self.tab_2)
         self.label_9.setGeometry(QtCore.QRect(260, 370, 41, 16))
         self.label_9.setObjectName("label_9")
@@ -220,11 +242,33 @@ class Ui_MainWindow(object):
         self.pushButton_7 = QtWidgets.QPushButton(self.tab_2)
         self.pushButton_7.setGeometry(QtCore.QRect(360, 330, 93, 28))
         self.pushButton_7.setObjectName("pushButton_7")
-        self.tableWidget_4 = QtWidgets.QTableWidget(self.tab_2)
-        self.tableWidget_4.setGeometry(QtCore.QRect(140, 490, 631, 251))
-        self.tableWidget_4.setObjectName("tableWidget_4")
-        self.tableWidget_4.setColumnCount(0)
-        self.tableWidget_4.setRowCount(0)
+        
+        #tabella sell risultati
+        self.tableWidget_1 = QtWidgets.QTableWidget(self.tab_2)
+        self.tableWidget_1.setGeometry(QtCore.QRect(140, 490, 631, 251))
+        self.tableWidget_1.setObjectName("tableWidget_1")
+        self.tableWidget_1.setRowCount(0)
+        self.tableWidget_1.setLineWidth(1)
+        self.tableWidget_1.setAutoScroll(True)
+        self.tableWidget_1.setProperty("showDropIndicator", True)
+        self.tableWidget_1.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
+        self.tableWidget_1.setShowGrid(True)
+        self.tableWidget_1.setCornerButtonEnabled(True)
+        self.tableWidget_1.setColumnCount(4)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_1.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_1.setHorizontalHeaderItem(1, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_1.setHorizontalHeaderItem(2, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget_1.setHorizontalHeaderItem(3, item)          
+        header = self.tableWidget_1.horizontalHeader()       
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)        
+        
         self.label_11 = QtWidgets.QLabel(self.tab_2)
         self.label_11.setGeometry(QtCore.QRect(430, 20, 55, 16))
         self.label_11.setObjectName("label_11")
@@ -244,14 +288,12 @@ class Ui_MainWindow(object):
         self.pushButton_8.setObjectName("pushButton_8")
         self.tabWidget.addTab(self.tab_3, "")             
         
+        #risultati
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
-#        self.graphicsView = QtWidgets.QGraphicsView(self.tab_4)
-#        self.graphicsView.setGeometry(QtCore.QRect(25, 51, 820, 641))
-#        self.graphicsView.setObjectName("Results")
         self.tabWidget.addTab(self.tab_4, "")        
         self.tableWidget_4 = QtWidgets.QTableWidget(self.tab_4)
-        self.tableWidget_4.setGeometry(QtCore.QRect(40, 50, 803, 641))
+        self.tableWidget_4.setGeometry(QtCore.QRect(40, 50, 1303, 801))
         self.tableWidget_4.setLineWidth(1)
         self.tableWidget_4.setAutoScroll(True)
         self.tableWidget_4.setProperty("showDropIndicator", True)
@@ -279,69 +321,85 @@ class Ui_MainWindow(object):
         self.tableWidget_4.setHorizontalHeaderItem(7, item)
         self.tableWidget_4.verticalHeader().setHighlightSections(True)        
         
-        
+        header = self.tableWidget_4.horizontalHeader()       
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
+#        
         ##### user account
-        self.label_14 = QtWidgets.QLabel(self.centralwidget)
-        self.label_14.setGeometry(QtCore.QRect(1500, 60, 91, 16))
-        self.label_14.setObjectName("label_14")
-        self.label_15 = QtWidgets.QLabel(self.centralwidget)
-        self.label_15.setGeometry(QtCore.QRect(1400, 110, 55, 16))
-        self.label_15.setObjectName("label_15")
-        self.pushButton_9 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_9.setGeometry(QtCore.QRect(1640, 100, 93, 21))
-        self.pushButton_9.setObjectName("pushButton_9")
-        self.label_16 = QtWidgets.QLabel(self.centralwidget)
-        self.label_16.setGeometry(QtCore.QRect(1480, 110, 55, 16))
-        self.label_16.setObjectName("label_16")
-        self.lineEdit_6 = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_6.setGeometry(QtCore.QRect(1560, 100, 71, 22))
-        self.lineEdit_6.setObjectName("lineEdit_6")
-        self.label_17 = QtWidgets.QLabel(self.centralwidget)
-        self.label_17.setGeometry(QtCore.QRect(1480, 180, 41, 16))
-        self.label_17.setObjectName("label_17")
-        self.lineEdit_7 = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_7.setGeometry(QtCore.QRect(1560, 170, 71, 22))
-        self.lineEdit_7.setObjectName("lineEdit_7")
-        self.label_18 = QtWidgets.QLabel(self.centralwidget)
-        self.label_18.setGeometry(QtCore.QRect(1380, 180, 91, 16))
-        self.label_18.setObjectName("label_18")
-        self.pushButton_10 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_10.setGeometry(QtCore.QRect(1640, 170, 131, 21))
-        self.pushButton_10.setObjectName("pushButton_10")
-        self.radioButton = QtWidgets.QRadioButton(self.centralwidget)
-        self.radioButton.setGeometry(QtCore.QRect(1570, 200, 95, 20))
-        self.radioButton.setObjectName("radioButton")
-        self.radioButton_2 = QtWidgets.QRadioButton(self.centralwidget)
-        self.radioButton_2.setGeometry(QtCore.QRect(1570, 230, 95, 20))
-        self.radioButton_2.setObjectName("radioButton_2")
-        self.label_19 = QtWidgets.QLabel(self.centralwidget)
-        self.label_19.setGeometry(QtCore.QRect(1480, 280, 55, 16))
-        self.label_19.setObjectName("label_19")
-        self.lineEdit_8 = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_8.setGeometry(QtCore.QRect(1560, 280, 71, 22))
-        self.lineEdit_8.setObjectName("lineEdit_8")
-        self.label_20 = QtWidgets.QLabel(self.centralwidget)
-        self.label_20.setGeometry(QtCore.QRect(1390, 280, 81, 16))
-        self.label_20.setObjectName("label_20")
-        self.pushButton_11 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_11.setGeometry(QtCore.QRect(1640, 280, 141, 21))
-        self.pushButton_11.setObjectName("pushButton_11")
-        self.pushButton_12 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_12.setGeometry(QtCore.QRect(1620, 340, 141, 21))
-        self.pushButton_12.setObjectName("pushButton_12")
-        self.label_21 = QtWidgets.QLabel(self.centralwidget)
-        self.label_21.setGeometry(QtCore.QRect(1430, 350, 131, 16))
-        self.label_21.setObjectName("label_21")
+        self.tab_5 = QtWidgets.QWidget()
+        self.tab_5.setObjectName("tab_5")
+        self.tabWidget.addTab(self.tab_5, "")        
 
-        self.tableWidget5 = QtWidgets.QTableWidget(self.centralwidget)
-        self.tableWidget5.setGeometry(QtCore.QRect(1380, 420, 481, 581))
+#        self.label_14 = QtWidgets.QLabel(self.tab_5)
+#        self.label_14.setGeometry(QtCore.QRect(20, 60, 91, 16))
+#        self.label_14.setObjectName("label_14")
+        self.label_15 = QtWidgets.QLabel(self.tab_5)
+        self.label_15.setGeometry(QtCore.QRect(20, 40, 65, 16))
+        self.label_15.setObjectName("label_15")
+        self.pushButton_9 = QtWidgets.QPushButton(self.tab_5)
+        self.pushButton_9.setGeometry(QtCore.QRect(300, 40, 93, 21))
+        self.pushButton_9.setObjectName("pushButton_9")
+        self.label_16 = QtWidgets.QLabel(self.tab_5)
+        self.label_16.setGeometry(QtCore.QRect(110, 40, 55, 16))
+        self.label_16.setObjectName("label_16")
+        self.lineEdit_6 = QtWidgets.QLineEdit(self.tab_5)
+        self.lineEdit_6.setGeometry(QtCore.QRect(220, 40, 71, 22))
+        self.lineEdit_6.setObjectName("lineEdit_6")
+        self.label_17 = QtWidgets.QLabel(self.tab_5)
+        self.label_17.setGeometry(QtCore.QRect(110, 80, 41, 16))
+        self.label_17.setObjectName("label_17")
+        self.lineEdit_7 = QtWidgets.QLineEdit(self.tab_5)
+        self.lineEdit_7.setGeometry(QtCore.QRect(220, 80, 71, 22))
+        self.lineEdit_7.setObjectName("lineEdit_7")
+        self.label_18 = QtWidgets.QLabel(self.tab_5)
+        self.label_18.setGeometry(QtCore.QRect(20, 80, 91, 16))
+        self.label_18.setObjectName("label_18")
+        self.pushButton_10 = QtWidgets.QPushButton(self.tab_5)
+        self.pushButton_10.setGeometry(QtCore.QRect(300, 80, 131, 21))
+        self.pushButton_10.setObjectName("pushButton_10")
+        self.radioButton = QtWidgets.QRadioButton(self.tab_5)
+        self.radioButton.setGeometry(QtCore.QRect(300, 110, 95, 20))
+        self.radioButton.setObjectName("radioButton")
+        self.radioButton_2 = QtWidgets.QRadioButton(self.tab_5)
+        self.radioButton_2.setGeometry(QtCore.QRect(300, 135, 95, 20))
+        self.radioButton_2.setObjectName("radioButton_2")
+        self.label_19 = QtWidgets.QLabel(self.tab_5)
+        self.label_19.setGeometry(QtCore.QRect(110, 180, 55, 16))
+        self.label_19.setObjectName("label_19")
+        self.lineEdit_8 = QtWidgets.QLineEdit(self.tab_5)
+        self.lineEdit_8.setGeometry(QtCore.QRect(220, 180, 71, 22))
+        self.lineEdit_8.setObjectName("lineEdit_8")
+        self.label_20 = QtWidgets.QLabel(self.tab_5)
+        self.label_20.setGeometry(QtCore.QRect(20, 180, 81, 16))
+        self.label_20.setObjectName("label_20")
+        self.pushButton_11 = QtWidgets.QPushButton(self.tab_5)
+        self.pushButton_11.setGeometry(QtCore.QRect(300, 180, 141, 21))
+        self.pushButton_11.setObjectName("pushButton_11")
+        self.pushButton_12 = QtWidgets.QPushButton(self.tab_5)
+        self.pushButton_12.setGeometry(QtCore.QRect(50, 270, 141, 21))
+        self.pushButton_12.setObjectName("pushButton_12")
+        self.label_21 = QtWidgets.QLabel(self.tab_5)
+        self.label_21.setGeometry(QtCore.QRect(250, 270, 131, 16))
+        self.label_21.setObjectName("label_21")
+        
+
+#        self.tableWidget_4.setGeometry(QtCore.QRect(40, 50, 803, 641))
+        self.tableWidget5 = QtWidgets.QTableWidget(self.tab_5)
+        self.tableWidget5.setGeometry(QtCore.QRect(80, 520, 1251, 321))
         self.tableWidget5.setLineWidth(1)
         self.tableWidget5.setAutoScroll(True)
         self.tableWidget5.setProperty("showDropIndicator", True)
         self.tableWidget5.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
         self.tableWidget5.setShowGrid(True)
         self.tableWidget5.setCornerButtonEnabled(True)
-        self.tableWidget5.setColumnCount(9)
+        self.tableWidget5.setColumnCount(13)
         self.tableWidget5.setObjectName("tableWidget")
         self.tableWidget5.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
@@ -362,6 +420,29 @@ class Ui_MainWindow(object):
         self.tableWidget5.setHorizontalHeaderItem(7, item)  
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget5.setHorizontalHeaderItem(8, item)  
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(9, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(10, item)  
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(11, item)  
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(12, item)          
+        
+        header = self.tableWidget5.horizontalHeader() 
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(7, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(8, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(9, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(10, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(11, QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(12, QtWidgets.QHeaderView.ResizeToContents)
         ###fine  user account
         
         
@@ -414,6 +495,7 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "LAUNCH"))
         self.pushButton_4.setText(_translate("MainWindow", "Remove layer"))
 
+        #tabella buy layers
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Name"))
         item = self.tableWidget.horizontalHeaderItem(1)
@@ -432,6 +514,17 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "BUY"))
         self.pushButton_5.setText(_translate("MainWindow", "Remove layer"))
         
+        #tabella buy risultati
+        item = self.tableWidget_2.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Strategia"))
+        item = self.tableWidget_2.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Timestamp"))
+        item = self.tableWidget_2.horizontalHeaderItem(2)
+        item.setText(_translate("MainWindow", "Data"))
+        item = self.tableWidget_2.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Successo"))
+        
+        #tabella sell layers
         item = self.tableWidget_3.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Name"))
         item = self.tableWidget_3.horizontalHeaderItem(1)
@@ -440,6 +533,16 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Valido"))
         item = self.tableWidget_3.horizontalHeaderItem(3)
         item.setText(_translate("MainWindow", "Attivo"))
+
+        #tabella sell risultati
+        item = self.tableWidget_1.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Strategia"))
+        item = self.tableWidget_1.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Timestamp"))
+        item = self.tableWidget_1.horizontalHeaderItem(2)
+        item.setText(_translate("MainWindow", "Data"))
+        item = self.tableWidget_1.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Successo"))
         
         self.label_9.setText(_translate("MainWindow", "Riga 2:"))
         self.pushButton_6.setText(_translate("MainWindow", "Inverti righe"))
@@ -449,9 +552,9 @@ class Ui_MainWindow(object):
         self.label_12.setText(_translate("MainWindow", "Risultati:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "SELL"))
         self.pushButton_8.setText(_translate("MainWindow", "Save image"))
+                        
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Grafici"))
-        
-        
+                
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Risultati"))  
         item = self.tableWidget_4.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Strategy"))
@@ -471,18 +574,20 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Result"))
         
         #user account
-        self.label_14.setText(_translate("MainWindow", "User Account"))
-        self.label_15.setText(_translate("MainWindow", "Saldo"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), _translate("MainWindow", "User account")) 
+                
+#        self.label_14.setText(_translate("MainWindow", "User Account"))
+        self.label_15.setText(_translate("MainWindow", "Saldo:"))
         self.pushButton_9.setText(_translate("MainWindow", "modifica saldo"))
         self.label_16.setText(_translate("MainWindow", "0"))
         self.label_17.setText(_translate("MainWindow", "0"))
-        self.label_18.setText(_translate("MainWindow", "Investimento"))
+        self.label_18.setText(_translate("MainWindow", "Investimento:"))
         self.pushButton_10.setText(_translate("MainWindow", "modifica investimento"))
         self.radioButton.setText(_translate("MainWindow", "percentuale"))
         self.radioButton_2.setText(_translate("MainWindow", "somma"))
         self.label_19.setText(_translate("MainWindow", "0"))
-        self.label_20.setText(_translate("MainWindow", "Commissioni"))
-        self.label_21.setText(_translate("MainWindow", "Risultato  0"))
+        self.label_20.setText(_translate("MainWindow", "Commissioni:"))
+        self.label_21.setText(_translate("MainWindow", "Risultato:  0"))
         self.pushButton_11.setText(_translate("MainWindow", "modifica commissioni"))
         self.pushButton_12.setText(_translate("MainWindow", "calcola rendimento"))
         
@@ -495,14 +600,22 @@ class Ui_MainWindow(object):
         item = self.tableWidget5.horizontalHeaderItem(3)
         item.setText(_translate("MainWindow", "Price"))
         item = self.tableWidget5.horizontalHeaderItem(4)
-        item.setText(_translate("MainWindow", "Name Sell"))
+        item.setText(_translate("MainWindow", "Quantity"))
         item = self.tableWidget5.horizontalHeaderItem(5)
-        item.setText(_translate("MainWindow", "Timestamp"))
+        item.setText(_translate("MainWindow", "Cost"))
         item = self.tableWidget5.horizontalHeaderItem(6)
-        item.setText(_translate("MainWindow", "Date"))
+        item.setText(_translate("MainWindow", "Name Sell"))
         item = self.tableWidget5.horizontalHeaderItem(7)
-        item.setText(_translate("MainWindow", "Price"))
+        item.setText(_translate("MainWindow", "Timestamp"))
         item = self.tableWidget5.horizontalHeaderItem(8)
+        item.setText(_translate("MainWindow", "Date"))
+        item = self.tableWidget5.horizontalHeaderItem(9)
+        item.setText(_translate("MainWindow", "Price"))
+        item = self.tableWidget5.horizontalHeaderItem(10)
+        item.setText(_translate("MainWindow", "Quantity"))
+        item = self.tableWidget5.horizontalHeaderItem(11)
+        item.setText(_translate("MainWindow", "Entry"))
+        item = self.tableWidget5.horizontalHeaderItem(12)
         item.setText(_translate("MainWindow", "Result"))
         #fine user account
         
@@ -567,14 +680,10 @@ class Ui_MainWindow(object):
          
     def calcolaRendimento(self):
         self.operazioni = self.user.calcolaInvestimento()
-        somma=0
-        for x in self.user.ricavi:
-            somma+=x
-        somma+=float(self.investimento)
-        self.saldo=float(self.saldo)+somma
-        self.label_16.setText(str(self.saldo))
-        self.label_21.setText("Ricavo: "+str(somma))
         
+        inv=self.investimento
+        diz={}
+        somma=0
         for i,x in enumerate(self.user.dati_result):
             name_b = "buy "+str(i+1)
             name_s = "sell "+str(i+1)
@@ -584,20 +693,47 @@ class Ui_MainWindow(object):
             date_s = datetime.datetime.fromtimestamp(int(time_s)) 
             price_b = x[0][1]
             price_s = x[1][1]
-            result = float(self.investimento)/float(price_b)-(float(self.investimento)/float(price_b))*float(price_s)
+            bought=float(inv)/float(price_b)
+            sold_at = float(bought)*float(price_s)
+            sold_amount=sold_at/float(price_s)
+            ricavo=float(sold_at)-float(inv)       
             rowPosition = self.tableWidget5.rowCount()
             self.tableWidget5.insertRow(rowPosition)
             self.tableWidget5.setItem(rowPosition,0, QTableWidgetItem(name_b))
             self.tableWidget5.setItem(rowPosition,1, QTableWidgetItem(str(time_b)))
             self.tableWidget5.setItem(rowPosition,2, QTableWidgetItem(str(date_b)))
             self.tableWidget5.setItem(rowPosition,3, QTableWidgetItem(str(price_b)))
-            self.tableWidget5.setItem(rowPosition,4, QTableWidgetItem(name_s))
-            self.tableWidget5.setItem(rowPosition,5, QTableWidgetItem(str(time_s)))
-            self.tableWidget5.setItem(rowPosition,6, QTableWidgetItem(str(date_s)))
-            self.tableWidget5.setItem(rowPosition,7, QTableWidgetItem(str(price_s)))
-            self.tableWidget5.setItem(rowPosition,8, QTableWidgetItem(str(result)))
+            self.tableWidget5.setItem(rowPosition,4, QTableWidgetItem(str(bought)))
+            self.tableWidget5.setItem(rowPosition,5, QTableWidgetItem(str(inv)))
+            self.tableWidget5.setItem(rowPosition,6, QTableWidgetItem(name_s))
+            self.tableWidget5.setItem(rowPosition,7, QTableWidgetItem(str(time_s)))
+            self.tableWidget5.setItem(rowPosition,8, QTableWidgetItem(str(date_s)))
+            self.tableWidget5.setItem(rowPosition,9, QTableWidgetItem(str(price_s)))
+            self.tableWidget5.setItem(rowPosition,10, QTableWidgetItem(str(sold_amount)))
+            self.tableWidget5.setItem(rowPosition,11, QTableWidgetItem(str(sold_at)))
+            self.tableWidget5.setItem(rowPosition,12, QTableWidgetItem(str(ricavo)))          
             
-            
+            diz["name_buy"]=name_b
+            diz["time_buy"]=time_b
+            diz["date_buy"]=date_b
+            diz["price_buy"]=price_b
+            diz["amount_buy"]=bought
+            diz["invested"]=inv
+            diz["name_sell"]=name_s
+            diz["time_sell"]=time_s
+            diz["date_sell"]=date_s
+            diz["price_sell"]=price_s
+            diz["amount_sell"]=sold_amount
+            diz["return"]=sold_at
+            diz["gain"]=ricavo
+            self.user.risultati.append(diz)
+            inv=float(inv)+ricavo
+            somma+=ricavo
+        
+        self.saldo=float(self.saldo)+somma
+        self.label_16.setText(str(self.saldo))
+        self.label_21.setText("Ricavo: "+str(somma))
+        
     def checkFile(self):
         try:
             with open(self.filename, "r") as f:
@@ -672,7 +808,7 @@ class Ui_MainWindow(object):
         buy=self.engine.buy_results
         sell=self.engine.sell_results
         results=self.engine.results
-        comp=self.engine.completed_strategies
+#        comp=self.engine.completed_strategies
         
         strategy_name=""
         layer_name=""
@@ -703,8 +839,33 @@ class Ui_MainWindow(object):
                                     self.tableWidget_4.setItem(rowPosition,6, QTableWidgetItem(timeperiod))
                                     self.tableWidget_4.setItem(rowPosition,7, QTableWidgetItem(result))
     
-        
-        
+        buy.sort(key=lambda x : x["timestamp"])
+        for strategy in buy:
+            strategy_name=strategy["strategy"]
+            timestamp=strategy["timestamp"]
+            date=str(datetime.datetime.fromtimestamp(int(timestamp)))
+            succ=strategy["succeded"]
+            rowPosition = self.tableWidget_2.rowCount()
+            self.tableWidget_2.insertRow(rowPosition)
+            self.tableWidget_2.setItem(rowPosition,0, QTableWidgetItem(strategy_name))
+            self.tableWidget_2.setItem(rowPosition,1, QTableWidgetItem(date))
+            self.tableWidget_2.setItem(rowPosition,2, QTableWidgetItem(str(timestamp)))
+            self.tableWidget_2.setItem(rowPosition,3, QTableWidgetItem(str(succ)))
+
+        sell.sort(key=lambda x : x["timestamp"])
+        for strategy in sell:
+            strategy_name=strategy["strategy"]
+            timestamp=strategy["timestamp"]
+            date=str(datetime.datetime.fromtimestamp(int(timestamp)))
+            succ=strategy["succeded"]
+            rowPosition = self.tableWidget_1.rowCount()
+            self.tableWidget_1.insertRow(rowPosition)
+            self.tableWidget_1.setItem(rowPosition,0, QTableWidgetItem(strategy_name))
+            self.tableWidget_1.setItem(rowPosition,1, QTableWidgetItem(date))
+            self.tableWidget_1.setItem(rowPosition,2, QTableWidgetItem(str(timestamp)))
+            self.tableWidget_1.setItem(rowPosition,3, QTableWidgetItem(str(succ)))         
+            
+            
     def getfile(self):
         self.dlg =QFileDialog()
         self.filename, _ =  self.dlg.getOpenFileName(None,'Open file', 'c:\\',"Image files (*.txt *.csv)")
@@ -1179,6 +1340,7 @@ class SMAWidget(QWidget):
             if len(t)>0:
                 self.instance.timeperiod=int(t)
                 self.instance.name+=t
+                self.instance.name+=" "+self.instance.value_type
                 self.close()
                 
         except:
