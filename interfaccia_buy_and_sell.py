@@ -102,6 +102,16 @@ class Ui_MainWindow(object):
         self.lineEdit.setGeometry(QtCore.QRect(152, 40, 131, 22))
         self.lineEdit.setObjectName("lineEdit")
         
+        #draw candles button
+        self.pushButton_draw_candles = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_draw_candles.setGeometry(QtCore.QRect(40, 840, 100, 31))
+        self.pushButton_draw_candles.setObjectName("draw_candles")   
+        self.pushButton_draw_graph = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_draw_graph.setGeometry(QtCore.QRect(150, 840, 100, 31))
+        self.pushButton_draw_graph.setObjectName("draw_graphs")   
+        self.lineEdit_TP = QtWidgets.QLineEdit(self.centralwidget) 
+        self.lineEdit_TP.setGeometry(QtCore.QRect(260, 840, 40, 22))
+        self.lineEdit_TP.setObjectName("lineEdit_TP")
         #inizia tab
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(440, 40, 1391, 902))
@@ -157,6 +167,10 @@ class Ui_MainWindow(object):
         self.pushButton_2.setGeometry(QtCore.QRect(360, 330, 93, 28))
         self.pushButton_2.setObjectName("pushButton_2")
         
+        self.pushButton_openlayer2 = QtWidgets.QPushButton(self.tab)
+        self.pushButton_openlayer2.setGeometry(QtCore.QRect(590, 330, 93, 28))
+        self.pushButton_openlayer2.setObjectName("pushButton_openlayer2")  
+        
         #tabella buy risultati
         self.tableWidget_2 = QtWidgets.QTableWidget(self.tab)
         self.tableWidget_2.setGeometry(QtCore.QRect(140, 490, 631, 251))
@@ -192,6 +206,7 @@ class Ui_MainWindow(object):
         self.label_13.setGeometry(QtCore.QRect(210, 460, 55, 16))
         self.label_13.setObjectName("label_13")
         
+        #sell tab
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
@@ -204,7 +219,9 @@ class Ui_MainWindow(object):
         self.pushButton_5 = QtWidgets.QPushButton(self.tab_2)
         self.pushButton_5.setGeometry(QtCore.QRect(470, 330, 93, 28))
         self.pushButton_5.setObjectName("pushButton_5")
-        
+        self.pushButton_openlayer = QtWidgets.QPushButton(self.tab_2)
+        self.pushButton_openlayer.setGeometry(QtCore.QRect(590, 330, 93, 28))
+        self.pushButton_openlayer.setObjectName("pushButton_openlayer")       
         #tabella SELL layers
         self.tableWidget_3 = QtWidgets.QTableWidget(self.tab_2)
         self.tableWidget_3.setGeometry(QtCore.QRect(140, 50, 631, 251))
@@ -277,16 +294,22 @@ class Ui_MainWindow(object):
         self.label_12.setObjectName("label_12")
         
         self.tabWidget.addTab(self.tab_2, "")
+        
+        #tab grafici
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
+        self.tabWidget.addTab(self.tab_3, "")  
+        
         self.graphicsView = QtWidgets.QGraphicsView(self.tab_3)
         self.label_img = QLabel(self.tab_3)
-        self.label_img.setGeometry(QtCore.QRect(25, 51, 820, 641))
+#        self.label_img.setGeometry(QtCore.QRect(25, 51, 1020, 1041))
+        self.label_img.move(-50,0)
+        self.label_img.resize(1500,900)
         self.label_img.setObjectName("graphicsView")
-        self.pushButton_8 = QtWidgets.QPushButton(self.tab_3)
-        self.pushButton_8.setGeometry(QtCore.QRect(780, 730, 93, 28))
-        self.pushButton_8.setObjectName("pushButton_8")
-        self.tabWidget.addTab(self.tab_3, "")             
+#        self.pushButton_8 = QtWidgets.QPushButton(self.tab_3)
+#        self.pushButton_8.setGeometry(QtCore.QRect(780, 730, 93, 28))
+#        self.pushButton_8.setObjectName("pushButton_8")
+                   
         
         #risultati
         self.tab_4 = QtWidgets.QWidget()
@@ -494,7 +517,9 @@ class Ui_MainWindow(object):
         self.pushButton_0.setText(_translate("MainWindow", "Create file"))
         self.pushButton.setText(_translate("MainWindow", "LAUNCH"))
         self.pushButton_4.setText(_translate("MainWindow", "Remove layer"))
-
+        self.pushButton_openlayer2.setText(_translate("MainWindow", "Open layer"))
+        self.pushButton_draw_candles.setText(_translate("MainWindow", "Draw candles"))
+        self.pushButton_draw_graph.setText(_translate("MainWindow", "Draw graph"))
         #tabella buy layers
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Name"))
@@ -513,6 +538,7 @@ class Ui_MainWindow(object):
         self.label_13.setText(_translate("MainWindow", "Risultati:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "BUY"))
         self.pushButton_5.setText(_translate("MainWindow", "Remove layer"))
+        self.pushButton_openlayer.setText(_translate("MainWindow", "Open layer"))
         
         #tabella buy risultati
         item = self.tableWidget_2.horizontalHeaderItem(0)
@@ -551,10 +577,13 @@ class Ui_MainWindow(object):
         self.label_11.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" color:#aa0000;\">SELL</span></p></body></html>"))
         self.label_12.setText(_translate("MainWindow", "Risultati:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "SELL"))
-        self.pushButton_8.setText(_translate("MainWindow", "Save image"))
-                        
+        
+        
+        #tab parte grafica
+#        self.pushButton_8.setText(_translate("MainWindow", "Save image"))                        
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Grafici"))
                 
+        #tab risultati
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Risultati"))  
         item = self.tableWidget_4.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Strategy"))
@@ -639,7 +668,10 @@ class Ui_MainWindow(object):
         #crea file e istanzia il data_exctractor e l´engine
         self.pushButton_0.clicked.connect(self.instantiateEngine)
         
-        #crea e rimuovi layers nella tabella
+        #draw candles
+        self.pushButton_draw_candles.clicked.connect(self.drawCandles)#
+        self.pushButton_draw_graph.clicked.connect(self.drawGraph)
+        #crea e rimuovi e  apri layers nella tabella
         self.pushButton_2.clicked.connect(partial(self.addLayer, tag=1))
         self.pushButton_7.clicked.connect(partial(self.addLayer, tag=2))
         self.pushButton_4.clicked.connect(partial(self.removeLayer, tag=1))
@@ -648,16 +680,55 @@ class Ui_MainWindow(object):
         self.pushButton_6.clicked.connect(partial(self.invertiLayer, tag=2))        
         self.tableWidget_3.cellDoubleClicked.connect(self.layerMethodsSell)
         self.tableWidget.cellDoubleClicked.connect(self.layerMethodsBuy)
-        
+        self.pushButton_openlayer.clicked.connect(partial(self.openLayer, tag=2))
+        self.pushButton_openlayer2.clicked.connect(partial(self.openLayer, tag=1))
         self.pushButton.clicked.connect(self.lauchStrategy)
     
-    
+   
         #user account 
         self.pushButton_9.clicked.connect(self.changeSaldo)
         self.pushButton_10.clicked.connect(self.changeInvestimento)
         self.pushButton_11.clicked.connect(self.changeCommissioni)
         self.pushButton_12.clicked.connect(self.calcolaRendimento)
+     
         
+    def drawGraph(self):
+        TP=self.lineEdit_TP.text()
+        if TP=="" or TP==None:
+            TP=1440
+        else:
+            TP=int(TP)
+        
+        drawer = engine.Drawer(self.data_extractor)
+        drawer.drawGraph(TP)    
+        
+        
+    def drawCandles(self):
+        TP=self.lineEdit_TP.text()
+        if TP=="" or TP==None:
+            TP=1440
+        else:
+            TP=int(TP)
+        print(TP)
+        drawer = engine.Drawer(self.data_extractor)
+        drawer.drawCandles(TP)
+#        except:
+#            print("some error")
+#            return
+        
+    def openLayer(self, tag):
+        m=""
+        if tag==2:
+            selectedRow = self.tableWidget_3.selectedItems()[0]
+            rowPosition=selectedRow.row()
+            m = self.layers_sell[rowPosition-1]
+        else:
+            selectedRow = self.tableWidget.selectedItems()[0]
+            rowPosition=selectedRow.row() 
+            m = self.layers_buy[rowPosition-1]
+
+        m.show()
+
     def changeSaldo(self):
         self.saldo= self.lineEdit_6.text()
         self.user.saldo= self.lineEdit_6.text()
@@ -800,8 +871,7 @@ class Ui_MainWindow(object):
     def addImage(self):
         pixmap = QPixmap('buy.png')
         self.label_img.setPixmap(pixmap)
-        self.label_img.resize(pixmap.width(), pixmap.height())        
-        
+        self.label_img.setPixmap(pixmap.scaled(self.label_img.size())) 
         
     def setDataTables(self):
 
@@ -941,19 +1011,38 @@ class Ui_MainWindow(object):
 
 #    @pyqtSlot()
     def layerMethodsSell(self):
+        
         selectedRow = self.tableWidget_3.selectedItems()[0]
         rowPosition=selectedRow.row()
-        m = self.layers_sell[rowPosition-1]
-        print("sell")
-        m.show()
-
+        colPosition=selectedRow.column()
+        if colPosition==0:
+            m = self.layers_buy[rowPosition-1]
+            m.show()  
+        elif colPosition==1:
+            return
+        elif colPosition==2:
+            item = self.tableWidget_3.item(rowPosition, colPosition)
+            if item.text()=="no":
+                item.setText("yes")
+            else:
+                item.setText("no")
+                
     def layerMethodsBuy(self):
+        
         selectedRow = self.tableWidget.selectedItems()[0]
         rowPosition=selectedRow.row()
-        m = self.layers_buy[rowPosition-1]
-        print("buz")
-        m.show()        
-        
+        colPosition=selectedRow.column()
+        if colPosition==0:
+            m = self.layers_buy[rowPosition-1]
+            m.show()  
+        elif colPosition==1:
+            return
+        elif colPosition==2:
+            item = self.tableWidget.item(rowPosition, colPosition)
+            if item.text()=="no":
+                item.setText("yes")
+            else:
+                item.setText("no")
         
     @pyqtSlot()
     def addLayer(self, tag):
@@ -969,7 +1058,8 @@ class Ui_MainWindow(object):
             if len(table.selectedItems())==0:
                 rowPosition = table.rowCount()
                 table.insertRow(rowPosition)
-                table.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
+                table.setItem(rowPosition,0, QTableWidgetItem("layer"+str(rowPosition+1)))
+                table.setItem(rowPosition,2, QTableWidgetItem("no"))
                 print(table.selectedItems())
                 m=Layer(self.data_extractor)          
                 layers.insert(rowPosition-1, m)
@@ -981,7 +1071,8 @@ class Ui_MainWindow(object):
                    print(str(self.lineEdit_2.text()))
                    rowPosition = int(self.lineEdit_2.text())
                 table.insertRow(rowPosition)
-                table.setItem(rowPosition,0, QTableWidgetItem("Dai un nome al layer"))
+                table.setItem(rowPosition,0, QTableWidgetItem("layer"+str(rowPosition+1)))
+                table.setItem(rowPosition,2, QTableWidgetItem("no"))
                 print(table.selectedItems())
                 m=Layer(self.data_extractor)          
                 layers.insert(rowPosition-1, m)
@@ -1130,7 +1221,7 @@ class Layer(QWidget):
         rowPosition=selectedRow.row()
         m = self.methods[rowPosition-1]
         m.show()        
-        
+ 
         
     def buildWidgetCombo(self):
         d = DevelopedMethods()
@@ -1308,7 +1399,7 @@ class SMAWidget(QWidget):
         self.data_extractor=data_extractor
         self.instance = engine.SMAClass(self.data_extractor)
         self.timeperiod=30
-        
+
         Form=self
         Form.setObjectName("Form")
         Form.resize(380, 251)

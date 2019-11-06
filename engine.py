@@ -12,13 +12,18 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import csv
 import traceback
+import datetime as dt
+import matplotlib.dates as mdates
+import pandas as pd
+#import pandas_datareader as web
+from mpl_finance import candlestick_ohlc
 
 class Engine:
     
     def __init__(self, name, data_extractor):
         self.name=name
         self.last_timestamp = "0"
-
+        
         self.data_extractor = data_extractor
         self.layers = []  #lista ordinata di oggetti di tipo methods: quindi il punto é che l´user istanzia un oggetto metodo
                             #che contiene al suo interno le istanze degli indicatori che confronta.
@@ -318,7 +323,7 @@ class SMAClass:
         self.timeperiod = 30
         self.data_extractor = data_extractor
         self.values = np.zeros(1)
-        self.name = "SMA indicator "#+str(timeperiod)
+        self.name = "SMA"#+str(timeperiod)
         self.data_list = data_extractor.data
         self.value_type="close"
        # self.diz= self.setDataList()
@@ -624,53 +629,69 @@ class DataExtractor:
     
     def createFile(self, file, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
         print("chiamato createTPFfromRawFile")
-        if not "TP"+str(tpValue) in self.TP_files:# or timestamp!=self.timestamp:
+#        if not "TP"+str(tpValue) in self.TP_files:# or timestamp!=self.timestamp:
 #            self.timestamp=timestamp
-            json_content={}
-            csv_content = [["timestamp","date","open","close","high","low","volume","average","direction"]]
-            print("apertura del file principale, nome file: , riga 477") 
-            print(file)
-            with open(file) as f:
-                candle_data = []          
+        json_content={}
+        candles=[]
+        csv_content = [["timestamp","date","open","close","high","low","volume","average","direction"]]
+        print("apertura del file principale, nome file: , riga 477") 
+        print(file)
+        with open(file, "r") as f:
+            candle_data = []          
+            first_line = f.readline()
+            if first_line[0].replace("\"", "")!="1":
                 first_line = f.readline()
-                print("first line, riga 516")
-                print(first_line)
-                data = first_line.split(",")
-                last_timestamp = data[0] 
-                last_timestamp = last_timestamp.replace("\"" , "")
-                print(last_timestamp)
+            print("first line, riga 516")
+            print(first_line)
+            data = first_line.replace("\"", "")
+            data = data.replace("\\n", "")
+            data = data.split(",")
+            last_timestamp = data[0] 
+            last_timestamp = last_timestamp.replace("\"" , "")
+            print(last_timestamp)
 #                date = datetime.fromtimestamp(int(last_timestamp))
+            candle_data.append({"timestamp":last_timestamp, "price":data[1], "amount":data[2]})
+            json_content["TP"+str(tpValue)] = []    
+            
+            for line in f:
+                line = line.replace("\"", "")
+                line = line.replace("\\n", "")
+                data = line.split(",")
+                actual_timestamp = data[0]
+                actual_tp = (float(actual_timestamp) - float(last_timestamp))/60 #number of minutes
+                checkTP = actual_tp / tpValue
+                
+                if checkTP>=1:   #se é il momento di creare una candela
+                    last_timestamp = actual_timestamp  #aggiorna il timestamp al punto attuale                   
+                    candlestick, candlestick_csv = self.createCandlestick(candle_data)  #chiama il metodo che crea la candela
+                    json_content["TP"+str(tpValue)].append(candlestick)
+                    candles.append(candlestick)
+                    csv_content.append(candlestick_csv)
+                    candle_data.clear()
+
                 candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
-                json_content["TP"+str(tpValue)] = []    
-                
-                for i, line in enumerate(f):
-                    line = line.replace("\"", "")
-                    data = line.split(",")
-                    actual_timestamp = data[0]
-                    actual_tp = (float(actual_timestamp) - float(last_timestamp))/60 #number of minutes
-                    checkTP = actual_tp / tpValue
-                    
-                    if checkTP>=1:   #se é il momento di creare una candela
-                        last_timestamp = actual_timestamp  #aggiorna il timestamp al punto attuale                   
-                        candlestick, candlestick_csv = self.createCandlestick(candle_data)  #chiama il metodo che crea la candela
-                        json_content["TP"+str(tpValue)].append(candlestick)
-                        csv_content.append(candlestick_csv)
-                        candle_data.clear()
+        print("il file principale è stato trasformato in candele, riga 415")
+        
+
+        with open("TP"+str(tpValue)+"_GRAPH.json", 'w', encoding='utf-8') as json_file:
+            json.dump(json_content, json_file, ensure_ascii=False, indent=4)              #salva il file
+            print("le candele sono stata scritte in un nuovo file, riga 418")
+            print("TP"+str(tpValue)+".json")
+#        self.TP_files["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
+        
+        with open("TP"+str(tpValue)+"_from_dictionary_GRAPH.csv", "w", newline='') as csv_file:
+            fields = ["timestamp","date","open","close","high","low","volume","average","direction"]
+            writer = csv.DictWriter(csv_file, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(json_content["TP"+str(tpValue)])
+        csv_name="TP"+str(tpValue)+"_from_dictionary_GRAPH.csv"
+        with open("TP"+str(tpValue)+"_GRAPH.csv", "w", newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerows(json_content["TP"+str(tpValue)])
+                          
+        return candles, csv_name
     
-                    candle_data.append({"timestamp":data[0], "price":data[1], "amount":data[2]})
-            print("il file principale è stato trasformato in candele, riga 415")
-            with open("TP"+str(tpValue)+".json", 'w', encoding='utf-8') as json_file:
-                json.dump(json_content, json_file, ensure_ascii=False, indent=4)              #salva il file
-                print("le candele sono stata scritte in un nuovo file, riga 418")
-                print("TP"+str(tpValue)+".json")
-            self.TP_files["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
-            
-            with open("TP"+str(tpValue)+".csv", "w") as csv_file:
-                writer = csv.writer(csv_file)
-                writer.writerows(json_content["TP"+str(tpValue)])
-                
-            
-        return self.TP_files["TP"+str(tpValue)]
+    
     def checkTPFile(self, tpValue): 
 #        if len(self.TP_files)==0:
 #            return False
@@ -708,17 +729,26 @@ class DataExtractor:
         
         average = sum_of_prices / numb_of_trades
         direction = int(float(openprice)-float(close))
-        
         candlestick["timestamp"] = timestamp
         candlestick["date"] = str(date)
-        candlestick["open"] = openprice
-        candlestick["close"] = close
-        candlestick["high"] = high
-        candlestick["low"] = low
+        candlestick["open"] = float(openprice)
+        candlestick["close"] = float(close)
+        candlestick["high"] = float(high)
+        candlestick["low"] = float(low)
         candlestick["volume"] = volume
         candlestick["average"] = average
         candlestick["direction"] = direction
-        candlestick_csv = [timestamp, str(date), openprice, close, high, low, volume, average, direction]
+        candlestick_csv = [timestamp, str(date), openprice, close, high, low, volume, average, direction]        
+#        candlestick["timestamp"] = timestamp
+#        candlestick["date"] = date
+#        candlestick["open"] = openprice
+#        candlestick["close"] = close
+#        candlestick["high"] = high
+#        candlestick["low"] = low
+#        candlestick["volume"] = volume
+#        candlestick["average"] = average
+#        candlestick["direction"] = direction
+#        candlestick_csv = [timestamp, str(date), openprice, close, high, low, volume, average, direction]
         return candlestick, candlestick_csv
     
         #quando vorró adattare questa parte dovró cambiare: questo va bene per un file giä diviso in candlesticks
@@ -834,8 +864,42 @@ def drawResults(file, operation):
     plt.show()
     
 
-        
+class Drawer:
+    def __init__(self, data_extractor):
+        self.data_extractor = data_extractor
+#        self.candleFile=""
+    
+    def drawCandles(self, TP):
+        filename = self.data_extractor.file
+        _, csv_name=self.data_extractor.createFile(filename, TP)
+        df = pd.read_csv(csv_name)
+        print(df["date"])
+        # Converting date to pandas datetime format
+        df['date'] = pd.to_datetime(df['date'])
+        df["date"] = df["date"].apply(mdates.date2num)
 
+        # Creating required data in new DataFrame OHLC
+        ohlc= df[['date', 'open', 'high', 'low','close']].copy()    
+        f1, ax = plt.subplots(figsize = (10,5))
+        # plot the candlesticks
+        candlestick_ohlc(ax, ohlc.values, width=.6, colorup='green', colordown='red')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+        # Saving image
+        plt.savefig('OHLC HDFC.png')
+
+        plt.show()  
+        
+    def drawGraph(self, TP):
+        filename = self.data_extractor.file
+        candles,_=self.data_extractor.createFile(filename, TP)
+        print(candles)
+        panda_array = pd.DataFrame(candles)
+#        pd.to_datetime(panda_array['date'])
+        plt.plot(panda_array['close'])
+        plt.show()
+
+    
+    
 class VolumeExtractor:
     
     def __init__(self, data_extractor, timeperiod, min_distance):
