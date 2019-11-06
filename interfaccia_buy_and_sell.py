@@ -7,6 +7,7 @@ Created on Sun Oct 27 12:31:15 2019
 import engine
 from PyQt5.QtWidgets import QComboBox, QTableWidget, QTableWidgetItem, QApplication, QWidget, QPushButton, QCalendarWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QLineEdit, QMessageBox, QMainWindow
 from PyQt5.QtCore import pyqtSlot, QDate, Qt
+from PyQt5.QtGui import QIcon, QPixmap
 import sys
 from functools import partial
 import time
@@ -235,8 +236,9 @@ class Ui_MainWindow(object):
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
         self.graphicsView = QtWidgets.QGraphicsView(self.tab_3)
-        self.graphicsView.setGeometry(QtCore.QRect(25, 51, 820, 641))
-        self.graphicsView.setObjectName("graphicsView")
+        self.label_img = QLabel(self.tab_3)
+        self.label_img.setGeometry(QtCore.QRect(25, 51, 820, 641))
+        self.label_img.setObjectName("graphicsView")
         self.pushButton_8 = QtWidgets.QPushButton(self.tab_3)
         self.pushButton_8.setGeometry(QtCore.QRect(780, 730, 93, 28))
         self.pushButton_8.setObjectName("pushButton_8")
@@ -277,7 +279,7 @@ class Ui_MainWindow(object):
         self.tableWidget_4.setHorizontalHeaderItem(7, item)
         self.tableWidget_4.verticalHeader().setHighlightSections(True)        
         
-#        self.graphicsView.
+        
         ##### user account
         self.label_14 = QtWidgets.QLabel(self.centralwidget)
         self.label_14.setGeometry(QtCore.QRect(1500, 60, 91, 16))
@@ -324,10 +326,13 @@ class Ui_MainWindow(object):
         self.pushButton_11 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_11.setGeometry(QtCore.QRect(1640, 280, 141, 21))
         self.pushButton_11.setObjectName("pushButton_11")
-#        self.tableView = QtWidgets.QTableView(self.centralwidget)
-#        self.tableView.setGeometry(QtCore.QRect(1380, 360, 401, 411))
-#        self.tableView.setObjectName("tableView")
-        #tabella BUY
+        self.pushButton_12 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_12.setGeometry(QtCore.QRect(1620, 340, 141, 21))
+        self.pushButton_12.setObjectName("pushButton_12")
+        self.label_21 = QtWidgets.QLabel(self.centralwidget)
+        self.label_21.setGeometry(QtCore.QRect(1430, 350, 131, 16))
+        self.label_21.setObjectName("label_21")
+
         self.tableWidget5 = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget5.setGeometry(QtCore.QRect(1380, 420, 481, 581))
         self.tableWidget5.setLineWidth(1)
@@ -336,7 +341,7 @@ class Ui_MainWindow(object):
         self.tableWidget5.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
         self.tableWidget5.setShowGrid(True)
         self.tableWidget5.setCornerButtonEnabled(True)
-        self.tableWidget5.setColumnCount(4)
+        self.tableWidget5.setColumnCount(9)
         self.tableWidget5.setObjectName("tableWidget")
         self.tableWidget5.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
@@ -346,7 +351,17 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget5.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
-        self.tableWidget5.setHorizontalHeaderItem(3, item)        
+        self.tableWidget5.setHorizontalHeaderItem(3, item)    
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(4, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(5, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(6, item)  
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(7, item)  
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget5.setHorizontalHeaderItem(8, item)  
         ###fine  user account
         
         
@@ -467,15 +482,39 @@ class Ui_MainWindow(object):
         self.radioButton_2.setText(_translate("MainWindow", "somma"))
         self.label_19.setText(_translate("MainWindow", "0"))
         self.label_20.setText(_translate("MainWindow", "Commissioni"))
+        self.label_21.setText(_translate("MainWindow", "Risultato  0"))
         self.pushButton_11.setText(_translate("MainWindow", "modifica commissioni"))
+        self.pushButton_12.setText(_translate("MainWindow", "calcola rendimento"))
+        
+        item = self.tableWidget5.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Name Buy"))
+        item = self.tableWidget5.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Timestamp"))
+        item = self.tableWidget5.horizontalHeaderItem(2)
+        item.setText(_translate("MainWindow", "Date"))
+        item = self.tableWidget5.horizontalHeaderItem(3)
+        item.setText(_translate("MainWindow", "Price"))
+        item = self.tableWidget5.horizontalHeaderItem(4)
+        item.setText(_translate("MainWindow", "Name Sell"))
+        item = self.tableWidget5.horizontalHeaderItem(5)
+        item.setText(_translate("MainWindow", "Timestamp"))
+        item = self.tableWidget5.horizontalHeaderItem(6)
+        item.setText(_translate("MainWindow", "Date"))
+        item = self.tableWidget5.horizontalHeaderItem(7)
+        item.setText(_translate("MainWindow", "Price"))
+        item = self.tableWidget5.horizontalHeaderItem(8)
+        item.setText(_translate("MainWindow", "Result"))
+        #fine user account
+        
+        
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.actionNew.setText(_translate("MainWindow", "New"))
         self.actionLoad.setText(_translate("MainWindow", "Load"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionExport.setText(_translate("MainWindow", "Export"))
         self.actionImport.setText(_translate("MainWindow", "Import"))
-        #fine user account
         
+
     def actions(self, MainWindow):
         #select file       
         self.toolButton.clicked.connect(self.getfile)
@@ -504,6 +543,7 @@ class Ui_MainWindow(object):
         self.pushButton_9.clicked.connect(self.changeSaldo)
         self.pushButton_10.clicked.connect(self.changeInvestimento)
         self.pushButton_11.clicked.connect(self.changeCommissioni)
+        self.pushButton_12.clicked.connect(self.calcolaRendimento)
         
     def changeSaldo(self):
         self.saldo= self.lineEdit_6.text()
@@ -525,6 +565,39 @@ class Ui_MainWindow(object):
         self.commissioni= self.lineEdit_8.text()
         self.user.commissioni= self.lineEdit_8.text()
          
+    def calcolaRendimento(self):
+        self.operazioni = self.user.calcolaInvestimento()
+        somma=0
+        for x in self.user.ricavi:
+            somma+=x
+        somma+=float(self.investimento)
+        self.saldo=float(self.saldo)+somma
+        self.label_16.setText(str(self.saldo))
+        self.label_21.setText("Ricavo: "+str(somma))
+        
+        for i,x in enumerate(self.user.dati_result):
+            name_b = "buy "+str(i+1)
+            name_s = "sell "+str(i+1)
+            time_b = x[0][0]
+            date_b = datetime.datetime.fromtimestamp(int(time_b)) 
+            time_s = x[1][0]
+            date_s = datetime.datetime.fromtimestamp(int(time_s)) 
+            price_b = x[0][1]
+            price_s = x[1][1]
+            result = float(self.investimento)/float(price_b)-(float(self.investimento)/float(price_b))*float(price_s)
+            rowPosition = self.tableWidget5.rowCount()
+            self.tableWidget5.insertRow(rowPosition)
+            self.tableWidget5.setItem(rowPosition,0, QTableWidgetItem(name_b))
+            self.tableWidget5.setItem(rowPosition,1, QTableWidgetItem(str(time_b)))
+            self.tableWidget5.setItem(rowPosition,2, QTableWidgetItem(str(date_b)))
+            self.tableWidget5.setItem(rowPosition,3, QTableWidgetItem(str(price_b)))
+            self.tableWidget5.setItem(rowPosition,4, QTableWidgetItem(name_s))
+            self.tableWidget5.setItem(rowPosition,5, QTableWidgetItem(str(time_s)))
+            self.tableWidget5.setItem(rowPosition,6, QTableWidgetItem(str(date_s)))
+            self.tableWidget5.setItem(rowPosition,7, QTableWidgetItem(str(price_s)))
+            self.tableWidget5.setItem(rowPosition,8, QTableWidgetItem(str(result)))
+            
+            
     def checkFile(self):
         try:
             with open(self.filename, "r") as f:
@@ -585,7 +658,15 @@ class Ui_MainWindow(object):
         self.engine.compareBuyAndSell=[]
         self.data_extractor.timestamp=self.date_start      
 
-    
+        self.addImage()
+        
+        
+    def addImage(self):
+        pixmap = QPixmap('buy.png')
+        self.label_img.setPixmap(pixmap)
+        self.label_img.resize(pixmap.width(), pixmap.height())        
+        
+        
     def setDataTables(self):
 
         buy=self.engine.buy_results
@@ -617,7 +698,7 @@ class Ui_MainWindow(object):
                                     self.tableWidget_4.setItem(rowPosition,1, QTableWidgetItem(layer_name))
                                     self.tableWidget_4.setItem(rowPosition,2, QTableWidgetItem(method_name))
                                     self.tableWidget_4.setItem(rowPosition,3, QTableWidgetItem(ind_name))
-                                    self.tableWidget_4.setItem(rowPosition,4, QTableWidgetItem(timestamp))
+                                    self.tableWidget_4.setItem(rowPosition,4, QTableWidgetItem(str(timestamp)))
                                     self.tableWidget_4.setItem(rowPosition,5, QTableWidgetItem(str(date)))
                                     self.tableWidget_4.setItem(rowPosition,6, QTableWidgetItem(timeperiod))
                                     self.tableWidget_4.setItem(rowPosition,7, QTableWidgetItem(result))

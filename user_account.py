@@ -11,6 +11,7 @@ class User:
         self.name = ""
         self.saldo = 0
         self.operations = []
+        self.ricavi=[]
         self.win = []
         self.lose = []
         self.safe__percent_limit=0   #in percentuale
@@ -58,10 +59,14 @@ class User:
 
     def calcolaInvestimento(self):       
         for x in self.dati_result:
-            prezzo_buy=x[0][1]
-            quantita=self.investimento/prezzo_buy
-            prezzo_sell=x[1][1]
-            ricavo=quantita*prezzo_sell
-            saldo_operazione=ricavo-self.investimento
-            self.operations.append(saldo_operazione)
-            return self.operations
+            self.investimento=int(self.investimento)
+            if int(self.investimento)>0:
+                prezzo_buy=x[0][1]
+                quantita=float(self.investimento)/float(prezzo_buy)
+                prezzo_sell=x[1][1]
+                saldo_operazione=quantita*float(prezzo_sell)
+                ricavo=saldo_operazione-float(self.investimento)
+                self.investimento+=ricavo
+                self.operations.append(saldo_operazione)
+                self.ricavi.append(ricavo)
+        return self.operations
