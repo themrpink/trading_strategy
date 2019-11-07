@@ -115,7 +115,7 @@ class Ui_MainWindow(object):
         #inizia tab
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.tabWidget.setGeometry(QtCore.QRect(440, 40, 1391, 902))
-        self.tabWidget.setObjectName("tabWidget")        
+        self.tabWidget.setObjectName("tabWidget")      
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         
@@ -148,8 +148,10 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(3, item)
-
-        self.tableWidget.verticalHeader().setHighlightSections(True)
+        self.tableWidget.setEditTriggers
+        self.tableWidget.verticalHeader().setHighlightSections(True)#
+        self.tableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        
         self.label_8 = QtWidgets.QLabel(self.tab)
         self.label_8.setGeometry(QtCore.QRect(260, 370, 41, 16))
         self.label_8.setObjectName("label_8")
@@ -192,7 +194,7 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(3, item)    
         header = self.tableWidget_2.horizontalHeader()       
-#        header.setSectionResizeMode(7, QtWidgets.QHeaderView.Stretch)
+
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
@@ -205,7 +207,10 @@ class Ui_MainWindow(object):
         self.label_13 = QtWidgets.QLabel(self.tab)
         self.label_13.setGeometry(QtCore.QRect(210, 460, 55, 16))
         self.label_13.setObjectName("label_13")
-        
+  
+        self.pushButton_plot_buy = QtWidgets.QPushButton(self.tab)
+        self.pushButton_plot_buy.setGeometry(QtCore.QRect(790, 330, 93, 28))
+        self.pushButton_plot_buy.setObjectName("pushButton_plot_buy")  
         #sell tab
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
@@ -243,6 +248,8 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_3.setHorizontalHeaderItem(3, item)
         self.tableWidget_3.verticalHeader().setHighlightSections(True)
+        self.tableWidget_3.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        
         
         self.label_9 = QtWidgets.QLabel(self.tab_2)
         self.label_9.setGeometry(QtCore.QRect(260, 370, 41, 16))
@@ -539,7 +546,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "BUY"))
         self.pushButton_5.setText(_translate("MainWindow", "Remove layer"))
         self.pushButton_openlayer.setText(_translate("MainWindow", "Open layer"))
-        
+        self.pushButton_plot_buy.setText(_translate("MainWindow", "Plot buy strategy"))
         #tabella buy risultati
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Strategia"))
@@ -671,18 +678,21 @@ class Ui_MainWindow(object):
         #draw candles
         self.pushButton_draw_candles.clicked.connect(self.drawCandles)#
         self.pushButton_draw_graph.clicked.connect(self.drawGraph)
+        self.pushButton_plot_buy.clicked.connect(self.drawBuyStrategy)
         #crea e rimuovi e  apri layers nella tabella
         self.pushButton_2.clicked.connect(partial(self.addLayer, tag=1))
         self.pushButton_7.clicked.connect(partial(self.addLayer, tag=2))
         self.pushButton_4.clicked.connect(partial(self.removeLayer, tag=1))
         self.pushButton_5.clicked.connect(partial(self.removeLayer, tag=2))
         self.pushButton_3.clicked.connect(partial(self.invertiLayer, tag=1))
-        self.pushButton_6.clicked.connect(partial(self.invertiLayer, tag=2))        
+        self.pushButton_6.clicked.connect(partial(self.invertiLayer, tag=2))   
+        
         self.tableWidget_3.cellDoubleClicked.connect(self.layerMethodsSell)
         self.tableWidget.cellDoubleClicked.connect(self.layerMethodsBuy)
+        
         self.pushButton_openlayer.clicked.connect(partial(self.openLayer, tag=2))
         self.pushButton_openlayer2.clicked.connect(partial(self.openLayer, tag=1))
-        self.pushButton.clicked.connect(self.lauchStrategy)
+        self.pushButton.clicked.connect(self.launchStrategy)
     
    
         #user account 
@@ -691,6 +701,9 @@ class Ui_MainWindow(object):
         self.pushButton_11.clicked.connect(self.changeCommissioni)
         self.pushButton_12.clicked.connect(self.calcolaRendimento)
      
+    def drawBuyStrategy(self):
+        drawer = engine.Drawer(self.data_extractor)
+        drawer.drawStrategy(self.date_start,self.date_end)          
         
     def drawGraph(self):
         TP=self.lineEdit_TP.text()
@@ -827,7 +840,10 @@ class Ui_MainWindow(object):
             return "there is a problem <br>with the file format", ""
         
         
-    def lauchStrategy(self):       
+    def launchStrategy(self):   
+        self.engine.lists_for_plot=[]
+        self.data_extractor.indicators_results=[]
+        
         strategyList=[]
 #        timedistance = self.date_end-self.date_start
         for l in self.layers_buy:
@@ -852,20 +868,27 @@ class Ui_MainWindow(object):
         self.engine.compareBuyAndSell()
         filename, compared =self.engine.saveResults()
         engine.drawResults(filename, "buy")
-#        engine.drawResults(filename, "buy")
-#        engine.drawResults(buy, "buy")  
-#        self.data_extractor.file=self.filename
+
         
         self.user.calcola(self.engine.completed_strategies,self.filename)
         self.setDataTables()
+        self.addImage()
         
+        self.data_extractor.indicators_results=self.engine.lists_for_plot
+        print(self.engine.lists_for_plot)
+        print("*********************************************************************************")
+        print(self.data_extractor.indicators_results)
+        
+        #reset values
         self.engine.last_timestamp=self.date_start
         self.engine.buy_results=[]
         self.engine.sell_results=[]
         self.engine.compareBuyAndSell=[]
-        self.data_extractor.timestamp=self.date_start      
-
-        self.addImage()
+        self.engine.completed_strategies=[]
+        
+        self.data_extractor.TP_files={}
+        self.data_extractor.TP_files_csv={}
+        self.data_extractor.timestamp=self.date_start  
         
         
     def addImage(self):
@@ -1016,7 +1039,7 @@ class Ui_MainWindow(object):
         rowPosition=selectedRow.row()
         colPosition=selectedRow.column()
         if colPosition==0:
-            m = self.layers_buy[rowPosition-1]
+            m = self.layers_sell[rowPosition-1]
             m.show()  
         elif colPosition==1:
             return

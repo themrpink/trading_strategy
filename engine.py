@@ -34,6 +34,7 @@ class Engine:
         self.layers_structure = []  #questo è una lista di dizionari, ognuno ha un set di metodi. Questi vanno iterati fino a che non si trova il valore
         self.completed_strategies=[]
         self.saved_file=""
+        self.lists_for_plot=[]
         
     def addLayer(self, layer):  #questo layer, che é un method, deve arrivare dalle selezioni dell´user
         self.layers.append(layer)
@@ -44,7 +45,9 @@ class Engine:
         count = 1
         next_strategy = True
         while next_strategy==True:
-            next_strategy, result, self.last_timestamp = strategy.searchSignal(self.last_timestamp, count)
+            next_strategy, result, self.last_timestamp, list_for_plot = strategy.searchSignal(self.last_timestamp, count)
+            if count==1:
+                self.lists_for_plot.append(list_for_plot)
             strategy_name="buy_strategy"+str(count)
             count+=1
             self.results[strategy_name]=result
@@ -60,7 +63,9 @@ class Engine:
         count = 1
         next_strategy = True
         while next_strategy==True:
-            next_strategy, result, self.last_timestamp = strategy.searchSignal(self.last_timestamp, count)
+            next_strategy, result, self.last_timestamp, list_for_plot = strategy.searchSignal(self.last_timestamp, count)
+            if count==1:
+                self.lists_for_plot.append(list_for_plot)
             strategy_name="sell_strategy"+str(count)
             count+=1
             self.results[strategy_name]=result
@@ -206,7 +211,7 @@ class Strategy:
         self.results={}
         count_layer=1
 #        self.final_timestamp=0
-        
+        lists_for_plot=[]
         print("chiamata strategia N."+str(count))
         for layer in self.layers:
             self.results["layer"+str(count_layer)] = []
@@ -217,10 +222,10 @@ class Strategy:
             check_if_true=False
             for method in layer:
                 print("la strategia N."+str(count)+" chiama un metodo, riga 111")
-                validity, result, timestamp = method.execute(actual_timestamp)
+                validity, result, timestamp, list_for_plot = method.execute(actual_timestamp)
 #                if int(timestamp)>int(self.final_timestamp):
 #                    self.final_timestamp=timestamp
-                    
+                lists_for_plot.append(list_for_plot)    
                 if validity:
                     check_if_true=True
                 first_method.append((int(timestamp), result))
@@ -238,7 +243,7 @@ class Strategy:
                 for x in first_method:
                     
                     self.results["layer"+str(count_layer)].append(x[1])
-                return False, self.results, last_timestamp
+                return False, self.results, last_timestamp, lists_for_plot
             
             first_method.sort(key=lambda x: x[0])
             
@@ -248,7 +253,7 @@ class Strategy:
             count_layer+=1
 #        last_timestamp = self.results[self.layers[-1].name][-1]["timestamp"]
         print("la strategia N "+str(count)+" ha avuto successo, torna true, riga 127")
-        return True, self.results, last_timestamp
+        return True, self.results, last_timestamp, lists_for_plot
 
     
 
@@ -270,7 +275,7 @@ class PriceCross():
         self.ind1=self.indicator1.getOutput2()
         self.indicator2.getData(last_timestamp, self.TP)
         self.ind2=self.indicator2.getOutput2()
-        
+        list_for_plot = [self.ind1, self.ind2]
         i=1
         diz={}
         while True:
@@ -286,7 +291,7 @@ class PriceCross():
                                "ind1":self.indicator1.name, 
                                "ind2":self.indicator2.name,
                                "timeperiod":self.TP,
-                               "method-name": "Price Cross"}, timestamp
+                               "method-name": "Price Cross"}, timestamp, list_for_plot
             
             if  self.ind1[i-1]-self.ind2[i-1] < 0 and self.ind1[i]-self.ind2[i] >= 0 and self.crossType=="above":
                 diz = {"ind1":self.indicator1.name, 
@@ -299,7 +304,7 @@ class PriceCross():
                        "timestamp": self.indicator1.diz2["timestamp"][i]}
                 timestamp = self.indicator1.diz2["timestamp"][i]
                 print("il metodo restituisce true, riga 187")
-                return True, diz, timestamp          #torna true se ind1 passa sopra a ind2
+                return True, diz, timestamp, list_for_plot          #torna true se ind1 passa sopra a ind2
             
             if  self.ind1[i-1]-self.ind2[i-1] > 0 and self.ind1[i]-self.ind2[i] <= 0 and self.crossType=="below":
                 diz = {"ind1":self.indicator1.name, 
@@ -312,7 +317,7 @@ class PriceCross():
                        "timestamp": self.indicator1.diz2["timestamp"][i]}      
                 timestamp = self.indicator1.diz2["timestamp"][i]
                 print("il metodo restituisce true, riga 199")
-                return True, diz, timestamp       #torna false se ind1 passa sotto a ind2 (ovvero ind2 passa sopra a ind1)
+                return True, diz, timestamp, list_for_plot       #torna false se ind1 passa sotto a ind2 (ovvero ind2 passa sopra a ind1)
             i+=1
             
         
@@ -334,6 +339,7 @@ class SMAClass:
 #        self.timeperiod=TP
         TP=int(TP)
 #        self.name+=" "+str(self.timeperiod)
+  
         print("metodo getData dell indicatore, riga 221")
         if int(timestamp) > int(self.data_extractor.timestamp):
             print("aggiornato timestamp: vecchio="+str(timestamp)+" nuovo=")
@@ -402,6 +408,7 @@ class SMAClass:
         self.values = tl.SMA(self.diz2[self.value_type], timeperiod=self.timeperiod)
 #        print("queste sono le values restituite dell indicatore:, riga 436")
 #        print(self.values)
+#        self.data_extractor.indicators_results.append(self.values)
         return self.values
 
 
@@ -410,7 +417,7 @@ class CandleExtractor:
         self.filename=filename
 #        self.TP=TP
 #        self.timestamp=timestamp
-        self.diz2={}
+#        self.diz2={}
 #        self.creaDiz(self.TP, self.timestamp)
         
     def creaDiz(self, TP, timestamp):
@@ -420,7 +427,6 @@ class CandleExtractor:
             n=len(data["TP"+str(TP)])
             print(n)
             i=0
-
             diz ={"date": [], 
                   "timestamp": [],
                   "open": [],
@@ -430,7 +436,9 @@ class CandleExtractor:
                   "volume": [], 
                   "average": [],
                   "direction": []}
+            
             print("aggiungi i valori dell indicatore nei numpy arrays, riga 245")
+            
             for candle in data["TP"+str(TP)]:
                 diz["date"].append(candle["date"])
                 diz["timestamp"].append(float(candle["timestamp"]))
@@ -440,9 +448,8 @@ class CandleExtractor:
                 diz["volume"].append(float(candle["volume"]))
                 diz["average"].append(float(candle["average"]))
                 diz["direction"].append(float(candle["direction"]))
-                
-
                 i+=1  
+                
             print("converti in numpy array - inizio, riga 293")        
             diz["date"]=np.array(diz["date"])
             diz["timestamp"]=np.array(diz["timestamp"])
@@ -454,10 +461,10 @@ class CandleExtractor:
             diz["direction"]=np.array(diz["direction"])
             print("converti in numpy array - fine, riga 301")
             print("crea il file myarray.csv, riga 302")
-            np.savetxt("myArray.csv", diz["open"])
+#            np.savetxt("myArray.csv", diz["open"])
             
             print("salva il diz2")
-            self.diz2=diz
+#            self.diz2=diz
 #            print(diz)
             return diz, timestamp
          
@@ -478,6 +485,7 @@ class DataExtractor:
         self.ts_end=float(ts_end)
 #        self.setFile()
         self.filename=filename
+        self.indicators_results=[]
         
     def setFile(self):
         print("lanciato il setFile")
@@ -739,17 +747,9 @@ class DataExtractor:
         candlestick["average"] = average
         candlestick["direction"] = direction
         candlestick_csv = [timestamp, str(date), openprice, close, high, low, volume, average, direction]        
-#        candlestick["timestamp"] = timestamp
-#        candlestick["date"] = date
-#        candlestick["open"] = openprice
-#        candlestick["close"] = close
-#        candlestick["high"] = high
-#        candlestick["low"] = low
-#        candlestick["volume"] = volume
-#        candlestick["average"] = average
-#        candlestick["direction"] = direction
-#        candlestick_csv = [timestamp, str(date), openprice, close, high, low, volume, average, direction]
+
         return candlestick, candlestick_csv
+    
     
         #quando vorró adattare questa parte dovró cambiare: questo va bene per un file giä diviso in candlesticks
     def extractData(self):
@@ -830,34 +830,14 @@ def drawResults(file, operation):
     n=1   
     strategy = operation+"_strategy" + str(n)
     draw_array = []
-    while strategy in diz:
-        
-        draw_array.append(int(diz[strategy]["timestamp"]))
-#        layers = diz[strategy]
-#        n_layer = 1
-#        method = "layer"+str(n_layer)
-#        layer_array = []
-#
-#        while method in layers:
-#            for d in layers[method]:
-#                layer_array.append(d["timestamp"])
-#                
-#            n_layer+=1
-#            method = "layer"+str(n_layer)           
-#        draw_array.append(layer_array)     
+    
+    while strategy in diz:     
+        draw_array.append(int(diz[strategy]["timestamp"]))  
         n+=1        
         strategy = operation+"_strategy"+str(n)
-        
-        
-        
+      
     print(draw_array)
-#    a=[]
-#    
-#    for x in draw_array:
-#        for y in x:
-#            a.append(y)
-#    print(a)
-#    np_array = np.array(a)  
+  
     np_array = np.array(draw_array)
     plt.plot(np_array)
     plt.savefig(operation+".png", dpi = 300)
@@ -892,14 +872,29 @@ class Drawer:
     def drawGraph(self, TP):
         filename = self.data_extractor.file
         candles,_=self.data_extractor.createFile(filename, TP)
-        print(candles)
         panda_array = pd.DataFrame(candles)
 #        pd.to_datetime(panda_array['date'])
         plt.plot(panda_array['close'])
         plt.show()
 
-    
-    
+    def drawStrategy(self, start, end):
+#        filename = self.data_extractor.file
+#        candles,_=self.data_extractor.createFile(filename, 240)
+#        panda_array = pd.DataFrame(candles)
+##        pd.to_datetime(panda_array['date'])
+#        plt.plot(panda_array['close'])
+#        x_list=range(int(start), int(end))
+        count=1
+        for x in self.data_extractor.indicators_results:
+            for y in x:
+                for z in y:
+                    print("test")
+                    x=range(len(z))
+                    plt.plot(x,z, label=str(count))
+                    count+=1
+        plt.legend()
+        plt.show()
+        
 class VolumeExtractor:
     
     def __init__(self, data_extractor, timeperiod, min_distance):
