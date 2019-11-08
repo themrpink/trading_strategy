@@ -4,7 +4,7 @@ Created on Fri Sep 27 23:03:01 2019
 
 @author: themr
 """
-
+import pandas as pd
 class User:
     
     def __init__(self):
@@ -30,7 +30,13 @@ class User:
         print(dati)
         for x in dati:
             self.dati_result.append([])
+            
+            ##############################################
+#        df_csv = pd.read_csv(file, names=['timeframe', 'price', 'volume'], header=1)
+        #####################################################
         with open(file, "r") as f:
+            
+        
             for line in f:
                 data=line.replace("\"", "")
                 data=data.replace("\\n", "")
