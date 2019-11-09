@@ -14,6 +14,7 @@ import time
 import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
 import user_account
+import indicatorWidgets as iw
 
 #data_extractor=engine.DataExtractor("")#.Data_extractor()
 
@@ -1275,11 +1276,13 @@ class PriceCrossWidget(QWidget):
         self.indicatorWidget1 = SMAWidget(self.data_extractor)
         self.indicatorWidget2 = SMAWidget(self.data_extractor)
         self.setMethod()
+        
         Form = self
         Form.setObjectName("Form")
         Form.resize(475, 481)
         self.label = QtWidgets.QLabel(Form)
         self.label.setGeometry(QtCore.QRect(190, 30, 131, 16))
+        
         self.label.setObjectName("label")
         self.radioButton = QtWidgets.QRadioButton(Form)
         self.radioButton.setGeometry(QtCore.QRect(90, 90, 95, 20))
@@ -1287,20 +1290,25 @@ class PriceCrossWidget(QWidget):
         self.radioButton_2 = QtWidgets.QRadioButton(Form)
         self.radioButton_2.setGeometry(QtCore.QRect(90, 120, 95, 20))
         self.radioButton_2.setObjectName("radioButton_2")
+        
         self.comboBox = QtWidgets.QComboBox(Form)
         self.comboBox.setGeometry(QtCore.QRect(50, 210, 211, 31))
         self.comboBox.setObjectName("comboBox")
-        self.comboBox.addItem("")
+        self.comboBox.addItem("SMA")
+        self.comboBox.addItem("CandlePrice")
         self.label_2 = QtWidgets.QLabel(Form)
         self.label_2.setGeometry(QtCore.QRect(50, 180, 121, 16))
         self.label_2.setObjectName("label_2")
+        
         self.comboBox_2 = QtWidgets.QComboBox(Form)
         self.comboBox_2.setGeometry(QtCore.QRect(50, 300, 211, 31))
         self.comboBox_2.setObjectName("comboBox_2")
-        self.comboBox_2.addItem("")
+        self.comboBox_2.addItem("SMA")
+        self.comboBox_2.addItem("CandlePrice")
         self.label_3 = QtWidgets.QLabel(Form)
         self.label_3.setGeometry(QtCore.QRect(50, 270, 121, 16))
         self.label_3.setObjectName("label_3")
+        
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(290, 210, 131, 28))
         self.pushButton.setObjectName("pushButton")
@@ -1335,9 +1343,11 @@ class PriceCrossWidget(QWidget):
         self.radioButton.setText(_translate("Form", "above"))
         self.radioButton_2.setText(_translate("Form", "below"))
         self.comboBox.setItemText(0, _translate("Form", "SMA"))
+        self.comboBox.setItemText(1, _translate("Form", "CandlePrice"))
         self.label_2.setText(_translate("Form", "Select first indicator"))
         self.comboBox_2.setItemText(0, _translate("Form", "SMA"))
-        self.label_3.setText(_translate("Form", "Select first indicator"))
+        self.comboBox_2.setItemText(1, _translate("Form", "CandlePrice"))
+        self.label_3.setText(_translate("Form", "Select second indicator"))
         self.pushButton.setText(_translate("Form", "indicator proprieties"))
         self.pushButton_2.setText(_translate("Form", "indicator proprieties"))
         self.label_4.setText(_translate("Form", "Crossing:"))
@@ -1347,13 +1357,21 @@ class PriceCrossWidget(QWidget):
         self.comboBox.activated[str].connect(partial(self.selectIndicator, i=1))
         self.comboBox_2.activated[str].connect(partial(self.selectIndicator, i=2))
         
-        self.pushButton.clicked.connect(self.indicatorWidget1.show)
-        self.pushButton_2.clicked.connect(self.indicatorWidget2.show)
+        self.pushButton.clicked.connect(partial(self.showWidget, i=1))
+        self.pushButton_2.clicked.connect(partial(self.showWidget, i=2))
         
         self.lineEdit.textEdited[str].connect(self.setTP)
         self.buttonBox.accepted.connect(self.instantiateMethod)
         self.buttonBox.rejected.connect(self.close)
     
+    def showWidget(self, i):
+        if int(i)==1:
+            self.indicatorWidget1.show()
+        elif int(i)==2:
+            self.indicatorWidget2.show()
+            
+            
+            
     def instantiateMethod(self):       
         if not self.radioButton.isChecked() and not self.radioButton_2.isChecked():
             msg = QMessageBox()
@@ -1393,18 +1411,22 @@ class PriceCrossWidget(QWidget):
         
     @pyqtSlot(str)
     def selectIndicator(self, arg, i):
-        
+        i=int(i)
         indicatorWidget=""
-            
+
         if arg=="SMA":
             indicatorWidget=SMAWidget(self.data_extractor)
             print(arg,i)
+        elif arg=="CandlePrice":
+            indicatorWidget=iw.CandlePriceWidget(self.data_extractor)
+            print(arg,i)  
             
         if i==1:
             self.indicatorWidget1 = indicatorWidget
+            print(self.indicatorWidget1)
         elif i==2:
             self.indicatorWidget2 = indicatorWidget
-            
+            print(self.indicatorWidget2)
             
     def setMethod(self):
         self.instance=engine.PriceCross()
@@ -1435,16 +1457,31 @@ class SMAWidget(QWidget):
         self.pushButton = QtWidgets.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(140, 140, 93, 28))
         self.pushButton.setObjectName("pushButton")
-
+        self.radioButton = QtWidgets.QRadioButton(Form)
+        self.radioButton.setGeometry(QtCore.QRect(40, 180, 95, 20))
+        self.radioButton.setObjectName("radioButton")
+        self.radioButton_2 = QtWidgets.QRadioButton(Form)
+        self.radioButton_2.setGeometry(QtCore.QRect(120, 180, 95, 20))
+        self.radioButton_2.setObjectName("radioButton_2")
+        self.radioButton_3 = QtWidgets.QRadioButton(Form)
+        self.radioButton_3.setGeometry(QtCore.QRect(200, 180, 61, 20))
+        self.radioButton_3.setObjectName("radioButton_3")
+        self.radioButton_4 = QtWidgets.QRadioButton(Form)
+        self.radioButton_4.setGeometry(QtCore.QRect(270, 180, 71, 20))
+        self.radioButton_4.setObjectName("radioButton_4")
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
+        
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.label.setText(_translate("Form", "Timeperiod"))
         self.pushButton.setText(_translate("Form", "set"))
-        
+        self.radioButton_4.setText(_translate("Form", "low"))
+        self.radioButton_2.setText(_translate("Form", "close"))
+        self.radioButton_3.setText(_translate("Form", "high"))
+        self.radioButton.setText(_translate("Form", "open"))
         
         self.pushButton.clicked.connect(self.setSMA)
         
@@ -1452,6 +1489,16 @@ class SMAWidget(QWidget):
         t=self.lineEdit.text()
         try:
             if len(t)>0:
+                
+                if self.radioButton.isChecked():
+                    self.instance.value_type=self.radioButton.text()
+                elif self.radioButton_2.isChecked():
+                    self.instance.value_type=self.radioButton_2.text()
+                elif self.radioButton_3.isChecked():
+                    self.instance.value_type=self.radioButton_3.text()
+                elif self.radioButton_4.isChecked():
+                    self.instance.value_type=self.radioButton_4.text()    
+                    
                 self.instance.timeperiod=int(t)
                 self.instance.name+=t
                 self.instance.name+=" "+self.instance.value_type
@@ -1483,4 +1530,12 @@ if __name__=="__main__":
 #    window.show()
 
     sys.exit(app.exec_())
-               
+          
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'SMA.ui'
+#
+# Created by: PyQt5 UI code generator 5.9.2
+#
+# WARNING! All changes made in this file will be lost!
+

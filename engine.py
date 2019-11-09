@@ -4,6 +4,7 @@ Created on Wed Sep 25 23:54:23 2019
 
 @author: themr
 """
+import math
 import os
 import numpy as np
 import talib as tl
@@ -269,10 +270,10 @@ class PriceCross():
 #        
         
     def execute(self, last_timestamp):      
-        self.indicator1.getData(last_timestamp, self.TP)
-        self.ind1=self.indicator1.getOutput2()
-        self.indicator2.getData(last_timestamp, self.TP)
-        self.ind2=self.indicator2.getOutput2()
+        self.ind1=self.indicator1.getData(last_timestamp, self.TP)
+#        self.ind1=self.indicator1.getOutput2()
+        self.ind2=self.indicator2.getData(last_timestamp, self.TP)
+#        self.ind2=self.indicator2.getOutput2()
         list_for_plot = [self.ind1, self.ind2]
         i=1
         i_df=self.indicator1.df.index[0]
@@ -283,6 +284,7 @@ class PriceCross():
 #            print(len(self.ind2))
 #            print(i)
             if i>=len(self.ind1)  or len(self.ind1)<=1 or i>=len(self.ind2) or len(self.ind2)<=1:
+                print("ok no crossed")
                 timestamp= int(self.indicator1.df.at[i_df+i-1, "timestamp"])
 #                timestamp = self.indicator1.diz2["timestamp"][i-1]
                 return False, {"result": "{} didn´t cross {}".format(self.indicator1.name, self.indicator2.name), 
@@ -293,8 +295,8 @@ class PriceCross():
                                "timeperiod":self.TP,
                                "method-name": "Price Cross"}, timestamp, list_for_plot
             
-            if  self.ind1[i-1]-self.ind2[i-1] < 0 and self.ind1[i]-self.ind2[i] >= 0 and self.crossType=="above":
-
+            if  not math.isnan(self.ind1[i-1]) and not math.isnan(self.ind1[i]) and not math.isnan(self.ind2[i-1]) and not math.isnan(self.ind2[i]) and self.ind1[i-1]-self.ind2[i-1] < 0 and self.ind1[i]-self.ind2[i] >= 0 and self.crossType=="above":
+#                print("ok above")
                 diz = {"ind1":self.indicator1.name, 
                        "ind2":self.indicator2.name, 
                        "timeperiod":self.TP,
@@ -309,7 +311,8 @@ class PriceCross():
 
                 return True, diz, timestamp, list_for_plot          #torna true se ind1 passa sopra a ind2
             
-            if  self.ind1[i-1]-self.ind2[i-1] > 0 and self.ind1[i]-self.ind2[i] <= 0 and self.crossType=="below":
+            if not math.isnan(self.ind1[i-1]) and not math.isnan(self.ind1[i]) and not math.isnan(self.ind2[i-1]) and not math.isnan(self.ind2[i]) and self.ind1[i-1]-self.ind2[i-1] > 0 and self.ind1[i]-self.ind2[i] <= 0 and self.crossType=="below":
+#                print("ok below")
                 diz = {"ind1":self.indicator1.name, 
                        "ind2":self.indicator2.name,
                        "timeperiod":self.TP,
@@ -332,7 +335,7 @@ class SMAClass:
         self.data_extractor = data_extractor
         self.values = np.zeros(1)
         self.name = "SMA"#+str(timeperiod)
-        self.data_list = data_extractor.data
+#        self.data_list = data_extractor.data
         self.value_type="close"
        # self.diz= self.setDataList()
         self.diz2= {}
@@ -374,25 +377,26 @@ class SMAClass:
         TP=int(TP)
 
         filename=self.data_extractor.file
-        self.data_extractor.createTPFromRawFile(filename, TP, timestamp)
-        c = CandleExtractor("TP"+str(TP)+".json")
+        self.data_extractor.createTPFromRawFile(filename, TP)
+        c = CandleExtractor("TP"+str(TP)+"_from_dictionary.csv")
+#        c = CandleExtractor("TP"+str(TP)+".json")
         self.df, timestamp=c.creaDiz( TP, timestamp)
-        return self.df, timestamp
-    
-        
-#    def storeData(self):
-#        with open("store.json", "w") as f:
-#            json.dump(self.data_list, f)         
-        
- 
-#    def getDataFromDateToDate(self, begin, end):
-#        self.data_list = self.data.selectPeriodFromDates(begin, end)
+#        return self.df, timestamp
+#    
 #        
-#    def getOutput(self):
-#        self.values = tl.SMA(self.diz[self.value_type], timeperiod=self.timeperiod)
-#        return self.values
-    
-    def getOutput2(self):
+##    def storeData(self):
+##        with open("store.json", "w") as f:
+##            json.dump(self.data_list, f)         
+#        
+# 
+##    def getDataFromDateToDate(self, begin, end):
+##        self.data_list = self.data.selectPeriodFromDates(begin, end)
+##        
+##    def getOutput(self):
+##        self.values = tl.SMA(self.diz[self.value_type], timeperiod=self.timeperiod)
+##        return self.values
+#    
+#    def getOutput2(self):
 #        print(self.diz2[self.value_type])
 #        self.values = tl.SMA(self.diz2[self.value_type], timeperiod=self.timeperiod)
 #        self.array= tl.SMA(self.diz2[self.array], timeperiod=self.timeperiod)
@@ -400,7 +404,7 @@ class SMAClass:
 #        print("queste sono le values restituite dell indicatore:, riga 436")
 #        print(self.values)
 #        self.data_extractor.indicators_results.append(self.values)
-        return self.values
+        return self.values.tolist()
 
 
 #class CandleExtractor:
@@ -467,12 +471,15 @@ class CandleExtractor:
     def __init__(self, filename):
         self.filename=filename
         
-    def creaDiz(self, TP, timestamp):
-        with open("TP"+str(TP)+".json", "r") as f:
-            data = json.load(f)
-            df = pd.DataFrame(data["TP"+str(TP)])
-            df['timestamp'] = df['timestamp'].astype(int)         
-            mask = df['timestamp'].values > timestamp
+    def creaDiz(self, TP, timestamp):       
+        df = pd.read_csv("TP"+str(TP)+"_from_dictionary.csv")
+        df['timestamp'] = df['timestamp'].astype(int)  
+        mask = df['timestamp'].values > timestamp
+#        with open("TP"+str(TP)+".json", "r") as f:
+#            data = json.load(f)
+#            df = pd.DataFrame(data["TP"+str(TP)])
+#            df['timestamp'] = df['timestamp'].astype(int)         
+#            mask = df['timestamp'].values > timestamp
         return df[mask], timestamp
         
         
@@ -492,6 +499,7 @@ class DataExtractor:
 #        self.setFile()
         self.filename=filename
         self.indicators_results=[]
+        self.createdFiles=[]    #contiene i nomi del file csv già creati
         
     def setFile(self):
         print("lanciato il setFile")
@@ -581,7 +589,7 @@ class DataExtractor:
         return self.timestamp#self.updated_file#, end
         
 
-    def createTPFromRawFile(self, file, tpValue, timestamp):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
+    def createTPFromRawFile(self, file, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
         print("chiamato createTPFfromRawFile")
         if not "TP"+str(tpValue) in self.TP_files:# or int(timestamp)>=int(self.timestamp):
 #            self.timestamp=timestamp
@@ -624,7 +632,7 @@ class DataExtractor:
 #            print("il file principale è stato trasformato in candele, riga 587")
             with open("TP"+str(tpValue)+".json", 'w', encoding='utf-8') as json_file:
                 json.dump(json_content, json_file, ensure_ascii=False, indent=4)              #salva il file
-#                print("le candele sono state scritte in un nuovo file, riga 589")
+                print("le candele sono state scritte in un nuovo file, riga 589")
 #                print("TP"+str(tpValue)+".json")
             self.TP_files["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
             
@@ -634,15 +642,16 @@ class DataExtractor:
             
             self.TP_files_csv["TP"+str(tpValue)] = "TP"+str(tpValue)+".json"
 
-            with open("TP"+str(tpValue)+"_from_dictionary.csv", "w") as csv_file:
+            with open("TP"+str(tpValue)+"_from_dictionary.csv", "w", newline='') as csv_file:
                 fields = ["timestamp","date","open","close","high","low","volume","average","direction"]
                 writer = csv.DictWriter(csv_file, fieldnames=fields)
                 writer.writeheader()
                 writer.writerows(json_content["TP"+str(tpValue)])
+                self.createdFiles.append("TP"+str(tpValue)+"_from_dictionary.csv")
         return self.TP_files["TP"+str(tpValue)]
     
     def createFile(self, file, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
-        print("chiamato createTPFfromRawFile")
+        print("chiamato createFile")
 #        if not "TP"+str(tpValue) in self.TP_files:# or timestamp!=self.timestamp:
 #            self.timestamp=timestamp
         json_content={}
