@@ -63,13 +63,13 @@ class CandlePriceWidget(QtWidgets.QWidget):
         
     def setCandlePrice(self):
         if self.radioButton.isChecked():
-            self.instance.value_type=self.radioButton.text()
+            self.instance.valueType=self.radioButton.text()
         elif self.radioButton_2.isChecked():
-            self.instance.value_type=self.radioButton_2.text()
+            self.instance.valueType=self.radioButton_2.text()
         elif self.radioButton_3.isChecked():
-            self.instance.value_type=self.radioButton_3.text()
+            self.instance.valueType=self.radioButton_3.text()
         elif self.radioButton_4.isChecked():
-            self.instance.value_type=self.radioButton_4.text()          
+            self.instance.valueType=self.radioButton_4.text()          
 
         self.instance.name+=" "+self.instance.valueType
         self.close()

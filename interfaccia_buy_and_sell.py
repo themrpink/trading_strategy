@@ -15,7 +15,7 @@ import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
 import user_account
 import indicatorWidgets as iw
-
+import json
 #data_extractor=engine.DataExtractor("")#.Data_extractor()
 
 class Ui_MainWindow(object):
@@ -24,8 +24,8 @@ class Ui_MainWindow(object):
         MainWindow.resize(1525, 881)
         
         #parte crea 
-        self.buyStrategy=""
-        self.sellStrategy=""
+#        self.buyStrategy=""
+#        self.sellStrategy=""
         self.date_end = ""
         self.date_start = ""
         self.data_extractor=""
@@ -419,7 +419,8 @@ class Ui_MainWindow(object):
         self.label_21 = QtWidgets.QLabel(self.tab_5)
         self.label_21.setGeometry(QtCore.QRect(250, 270, 131, 16))
         self.label_21.setObjectName("label_21")
-        
+        self.pushButton_save = QtWidgets.QPushButton(self.tab_5)
+        self.pushButton_save.setGeometry(QtCore.QRect(600, 180, 141, 21))
 
 #        self.tableWidget_4.setGeometry(QtCore.QRect(40, 50, 803, 641))
         self.tableWidget5 = QtWidgets.QTableWidget(self.tab_5)
@@ -627,6 +628,7 @@ class Ui_MainWindow(object):
         self.label_21.setText(_translate("MainWindow", "Risultato:  0"))
         self.pushButton_11.setText(_translate("MainWindow", "modifica commissioni"))
         self.pushButton_12.setText(_translate("MainWindow", "calcola rendimento"))
+        self.pushButton_save.setText(_translate("MainWindow", "salva risultati"))
         
         item = self.tableWidget5.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Name Buy"))
@@ -701,7 +703,39 @@ class Ui_MainWindow(object):
         self.pushButton_10.clicked.connect(self.changeInvestimento)
         self.pushButton_11.clicked.connect(self.changeCommissioni)
         self.pushButton_12.clicked.connect(self.calcolaRendimento)
-     
+        self.pushButton_save.clicked.connect(self.saveResults)
+
+    def saveResults(self):
+        risultato = {}
+        risultato["data_inizio"] = str(datetime.datetime.fromtimestamp(int(self.date_start)))
+        risultato["data_fine"] = str(datetime.datetime.fromtimestamp(int(self.date_end)))
+        risultato["buying stratety"]={}
+        for x in self.layers_buy:
+            risultato["buying stratety"][x.name]={}
+            for y in x.methods:
+                risultato["buying stratety"][x.name][y.complete_name]=[]
+                risultato["buying stratety"][x.name][y.complete_name].append(y.getNames())
+        risultato["selling stratety"]={}
+        for x in self.layers_sell:
+            risultato["selling stratety"][x.name]={}
+            for y in x.methods:
+                risultato["selling stratety"][x.name][y.complete_name]=[]
+                risultato["selling stratety"][x.name][y.complete_name].append(y.getNames())
+        risultato["investment"]=self.label_17.text()
+        risultato["return"]= self.label_21.text()
+        
+        with open("saved_results.json", "r") as f:
+            try:
+                data=json.load(f)
+            except:
+                data={}
+                data["results"]=[]
+            data["results"].append(risultato)
+        
+            with open ("saved_results.json", "w") as f2:
+                json.dump(data, f2)
+        
+        
     def drawBuyStrategy(self):
         drawer = engine.Drawer(self.data_extractor)
         drawer.drawStrategy(self.date_start,self.date_end)          
@@ -1085,7 +1119,8 @@ class Ui_MainWindow(object):
                 table.setItem(rowPosition,0, QTableWidgetItem("layer"+str(rowPosition+1)))
                 table.setItem(rowPosition,2, QTableWidgetItem("no"))
                 print(table.selectedItems())
-                m=Layer(self.data_extractor)          
+                m=Layer(self.data_extractor)   
+                m.name="layer"+str(rowPosition+1)
                 layers.insert(rowPosition-1, m)
     
             else:
@@ -1098,7 +1133,8 @@ class Ui_MainWindow(object):
                 table.setItem(rowPosition,0, QTableWidgetItem("layer"+str(rowPosition+1)))
                 table.setItem(rowPosition,2, QTableWidgetItem("no"))
                 print(table.selectedItems())
-                m=Layer(self.data_extractor)          
+                m=Layer(self.data_extractor)    
+                m.name="layer"+str(rowPosition+1)
                 layers.insert(rowPosition-1, m)
         except:
             return
@@ -1335,7 +1371,8 @@ class PriceCrossWidget(QWidget):
         QtCore.QMetaObject.connectSlotsByName(Form)
         self.setActions()
         
-        
+    def getNames(self):
+        return [self.indicatorWidget1.instance.name, self.indicatorWidget2.instance.name ]
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Price Cross"))
@@ -1393,7 +1430,9 @@ class PriceCrossWidget(QWidget):
                 self.crossType="above"
             elif self.radioButton_2.isChecked():
                 self.crossType="below"
+                
 #            self.indicator1=self.comboBox.t
+            self.complete_name=self.name+" "+str(self.TP)+" "+self.crossType
             self.setMethod()
             self.close()
             
