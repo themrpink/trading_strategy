@@ -913,19 +913,22 @@ class Drawer:
                     
                     if count==1:                        
                         a,=ax1.plot(range(len(z[1])), z[1], color, label=z[0])
+                        ax1.tick_params(axis='x', labelcolor=color)
                         count+=1
                         labels.append(a)
                         lab.append(z[0])
                     else:
-                        ax2=ax1.twiny()
-                        labels.append(a)
+                        ax2=ax1.twiny()                       
                         lab.append(z[0])
                         print("test")
                         l=range(len(z[1]))
                         a,=ax2.plot(l,z[1], color, label=z[0])
+                        labels.append(a)
+                        ax2.tick_params(axis='x', labelcolor=color)
                     count+=1
 
         plt.legend(labels, lab)
+        fig.tight_layout()
         plt.show()
         
         
