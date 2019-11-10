@@ -274,7 +274,7 @@ class PriceCross():
 #        self.ind1=self.indicator1.getOutput2()
         self.ind2=self.indicator2.getData(last_timestamp, self.TP)
 #        self.ind2=self.indicator2.getOutput2()
-        list_for_plot = [self.ind1, self.ind2]
+        list_for_plot = [(self.indicator1.name,self.ind1), (self.indicator2.name,self.ind2)]
         i=1
         i_df=self.indicator1.df.index[0]
         diz={}
@@ -865,6 +865,8 @@ class Drawer:
 #        self.candleFile=""
     
     def drawCandles(self, TP):
+#        if "TP"+str(TP) in self.data_extractor.TP_files:
+            
         filename = self.data_extractor.file
         _, csv_name=self.data_extractor.createFile(filename, TP)
         df = pd.read_csv(csv_name)
@@ -899,15 +901,31 @@ class Drawer:
 ##        pd.to_datetime(panda_array['date'])
 #        plt.plot(panda_array['close'])
 #        x_list=range(int(start), int(end))
+        colors=["b", "r", "g", "c", "y", "m", "k"]
         count=1
+        labels=[]
+        lab=[]
+        fig, ax1 = plt.subplots()
         for x in self.data_extractor.indicators_results:
             for y in x:
                 for z in y:
-                    print("test")
-                    x=range(len(z))
-                    plt.plot(x,z, label=str(count))
+                    color=colors[(count-1)%7]
+                    
+                    if count==1:                        
+                        a,=ax1.plot(range(len(z[1])), z[1], color, label=z[0])
+                        count+=1
+                        labels.append(a)
+                        lab.append(z[0])
+                    else:
+                        ax2=ax1.twiny()
+                        labels.append(a)
+                        lab.append(z[0])
+                        print("test")
+                        l=range(len(z[1]))
+                        a,=ax2.plot(l,z[1], color, label=z[0])
                     count+=1
-        plt.legend()
+
+        plt.legend(labels, lab)
         plt.show()
         
         

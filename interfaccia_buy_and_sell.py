@@ -16,6 +16,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import user_account
 import indicatorWidgets as iw
 import json
+import numpy as np
+import matplotlib.pyplot as plt
 #data_extractor=engine.DataExtractor("")#.Data_extractor()
 
 class Ui_MainWindow(object):
@@ -421,10 +423,11 @@ class Ui_MainWindow(object):
         self.label_21.setObjectName("label_21")
         self.pushButton_save = QtWidgets.QPushButton(self.tab_5)
         self.pushButton_save.setGeometry(QtCore.QRect(600, 180, 141, 21))
-
+        self.pushButton_plot_results = QtWidgets.QPushButton(self.tab_5)
+        self.pushButton_plot_results.setGeometry(QtCore.QRect(800, 180, 161, 21))
 #        self.tableWidget_4.setGeometry(QtCore.QRect(40, 50, 803, 641))
         self.tableWidget5 = QtWidgets.QTableWidget(self.tab_5)
-        self.tableWidget5.setGeometry(QtCore.QRect(80, 520, 1251, 321))
+        self.tableWidget5.setGeometry(QtCore.QRect(80, 350, 1251, 321))
         self.tableWidget5.setLineWidth(1)
         self.tableWidget5.setAutoScroll(True)
         self.tableWidget5.setProperty("showDropIndicator", True)
@@ -629,7 +632,7 @@ class Ui_MainWindow(object):
         self.pushButton_11.setText(_translate("MainWindow", "modifica commissioni"))
         self.pushButton_12.setText(_translate("MainWindow", "calcola rendimento"))
         self.pushButton_save.setText(_translate("MainWindow", "salva risultati"))
-        
+        self.pushButton_plot_results.setText(_translate("MainWindow", "visualizza risultati"))
         item = self.tableWidget5.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Name Buy"))
         item = self.tableWidget5.horizontalHeaderItem(1)
@@ -704,7 +707,31 @@ class Ui_MainWindow(object):
         self.pushButton_11.clicked.connect(self.changeCommissioni)
         self.pushButton_12.clicked.connect(self.calcolaRendimento)
         self.pushButton_save.clicked.connect(self.saveResults)
+        self.pushButton_plot_results.clicked.connect(self.plotResults)
 
+    def plotResults(self):
+        print(self.user.risultati)
+        ricavi=[]
+        buyAt=[]
+        sellAt=[]
+        gain=[]
+        inv=[]
+        for x in self.user.risultati:
+#            ricavi.append(x["return"])
+            inv.append(x["invested"])
+#            sellAt.append(x["price_sell"])
+            gain.append(x["gain"])
+#            buyAt.append(x["price_buy"])
+        print(ricavi, gain, inv)
+#        plt.plot(np.asarray(ricavi), label="return")
+        plt.plot(np.asarray(gain), label="gain")
+        plt.plot(np.asarray(inv), label="investment")
+#        plt.plot(np.asarray(buyAt), label="buy price")
+#        plt.plot(np.asarray(sellAt), label="sell price")
+        plt.legend()
+        plt.show()      
+        
+        
     def saveResults(self):
         risultato = {}
         risultato["data_inizio"] = str(datetime.datetime.fromtimestamp(int(self.date_start)))
@@ -723,18 +750,19 @@ class Ui_MainWindow(object):
                 risultato["selling stratety"][x.name][y.complete_name].append(y.getNames())
         risultato["investment"]=self.label_17.text()
         risultato["return"]= self.label_21.text()
-        
-        with open("saved_results.json", "r") as f:
-            try:
+        try:
+            with open("saved_results.json", "r") as f:               
                 data=json.load(f)
-            except:
+                data["results"].append(risultato) 
+                with open ("saved_results.json", "w") as f2:
+                    json.dump(data, f2)
+        except:
+            with open ("saved_results.json", "w") as f2:
                 data={}
                 data["results"]=[]
-            data["results"].append(risultato)
-        
-            with open ("saved_results.json", "w") as f2:
+                data["results"].append(risultato) 
                 json.dump(data, f2)
-        
+                
         
     def drawBuyStrategy(self):
         drawer = engine.Drawer(self.data_extractor)
@@ -783,15 +811,13 @@ class Ui_MainWindow(object):
         self.label_16.setText(self.lineEdit_6.text())
         
     def changeInvestimento(self):
-        self.investimento= self.lineEdit_7.text()
-        self.label_17.setText(self.lineEdit_7.text())  
         if self.radioButton.isChecked():
-            self.label_17.setText(self.lineEdit_7.text()+"%")  
-            self.investimento_perc= self.lineEdit_7.text()            
+            self.investimento=(float(self.saldo)*float(self.lineEdit_7.text()))/100
         else:
-            self.investimento= self.lineEdit_7.text()
-            self.label_17.setText(self.lineEdit_7.text())      
-        self.user.investimento=self.lineEdit_7.text()
+            self.investimento= float(self.lineEdit_7.text())  
+        self.user.investimento=self.investimento
+        self.label_17.setText(str(self.investimento))      
+
          
     def changeCommissioni(self):
         self.commissioni= self.lineEdit_8.text()
@@ -801,9 +827,11 @@ class Ui_MainWindow(object):
         self.operazioni = self.user.calcolaInvestimento()
         
         inv=self.investimento
-        diz={}
+#        diz={}
         somma=0
+#        ricavi=[]
         for i,x in enumerate(self.user.dati_result):
+            diz={}
             name_b = "buy "+str(i+1)
             name_s = "sell "+str(i+1)
             time_b = x[0][0]
@@ -816,6 +844,8 @@ class Ui_MainWindow(object):
             sold_at = float(bought)*float(price_s)
             sold_amount=sold_at/float(price_s)
             ricavo=float(sold_at)-float(inv)       
+            
+#            ricavi.append(ricavo)
             rowPosition = self.tableWidget5.rowCount()
             self.tableWidget5.insertRow(rowPosition)
             self.tableWidget5.setItem(rowPosition,0, QTableWidgetItem(name_b))
@@ -852,7 +882,8 @@ class Ui_MainWindow(object):
         self.saldo=float(self.saldo)+somma
         self.label_16.setText(str(self.saldo))
         self.label_21.setText("Ricavo: "+str(somma))
-        
+#        a=plt.plot(np.asarray(ricavi))
+#        plt.show()
     def checkFile(self):
         try:
             with open(self.filename, "r") as f:
@@ -910,9 +941,9 @@ class Ui_MainWindow(object):
         self.addImage()
         
         self.data_extractor.indicators_results=self.engine.lists_for_plot
-        print(self.engine.lists_for_plot)
-        print("*********************************************************************************")
-        print(self.data_extractor.indicators_results)
+#        print(self.engine.lists_for_plot)
+#        print("*********************************************************************************")
+#        print(self.data_extractor.indicators_results)
         
         #reset values
         self.engine.last_timestamp=self.date_start
