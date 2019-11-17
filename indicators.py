@@ -4,7 +4,11 @@ Created on Fri Nov  8 16:16:07 2019
 
 @author: themr
 """
+import engine
 import pandas as pd
+import matplotlib.pyplot as plt
+import datetime
+
 #import engine
 
 class CandlePrice:
@@ -21,3 +25,4 @@ class CandlePrice:
         self.df['timestamp'] = self.df['timestamp'].astype(int) 
         self.df=self.df[self.df.timestamp>timestamp]
         return self.df[self.valueType].tolist()
+    

@@ -83,14 +83,23 @@ class Engine:
         file = self.data_extractor.file
         print(file)
         sell_timeframes=[]
+        print(self.buy_results)
         for result in self.buy_results:
             if result["succeded"]:
                 timestamp = int(result["timestamp"])
     #            print(timestamp)
                 with open (file, "r") as f:
                      csv_reader = csv.reader(f, delimiter=',')
+#                     print(csv_reader)
                      for row in csv_reader:
-    #                     print(row)
+                        
+#                         row=row.replace("\"", "")
+                         if len(row)==1:
+#                             print(row)
+                             row=row[0].split(",")
+#                             print(row)
+#                             row=[row[0]]
+#                         row=row.replace("\"", "")
                          if int(row[0])>=timestamp:
                              print(timestamp)
                              buy_price=float(row[1])  #questi buy price devo salvarli per poi associarli con il sell price finale
@@ -141,6 +150,9 @@ class Engine:
 #             while int(row[0]) < timestamp:
 #                 row=csv_reader.__next__()
              for row in csv_reader:
+                 if len(row)==1:
+#                             print(row)
+                     row=row[0].split(",")
                  if int(row[0])>=timestamp:
                      break
 #             print("row:")
@@ -154,6 +166,9 @@ class Engine:
             
             
              for row in csv_reader:
+                 if len(row)==1:
+#                             print(row)
+                     row=row[0].split(",")
 #                 print(row)
                  rows.append(row)
                  if int(row[0])>=time_distance:                    
@@ -167,6 +182,8 @@ class Engine:
     
     
     def compareBuyAndSell(self):
+        self.signals=[]
+        check=False
         for buy_signal in self.buy_results:
             if buy_signal["succeded"]:
                 timestamp_buy = buy_signal["timestamp"]
@@ -175,10 +192,20 @@ class Engine:
                         timestamp_sell = sell_signal["timestamp"]
                         if timestamp_sell>=timestamp_buy:
                            self.completed_strategies.append((timestamp_buy, timestamp_sell))
+                           self.signals.append(timestamp_sell)
+                           check=True
                            break
-    
 
-            
+            if check:
+                check=False
+            else:
+                self.signals.append(0)
+        self.data_extractor.signals=self.signals
+        print("lunghezza1")
+        print(len(self.buy_results))
+        print("lunghezza2")
+        print(len(self.signals))
+        
     def saveResults(self):
         print("saving results, riga 80")
         with open(self.name+".json", "w") as f:
@@ -500,7 +527,7 @@ class DataExtractor:
         self.filename=filename
         self.indicators_results=[]
         self.createdFiles=[]    #contiene i nomi del file csv già creati
-        
+        self.signals=[]
     def setFile(self):
         print("lanciato il setFile")
         if self.ts_end==0:
@@ -909,10 +936,9 @@ class Drawer:
         for x in self.data_extractor.indicators_results:
             for y in x:
                 for z in y:
-                    color=colors[(count-1)%7]
-                    
+                    color=colors[(count-1)%7]                    
                     if count==1:                        
-                        a,=ax1.plot(range(len(z[1])), z[1], color, label=z[0])
+                        a,=ax1.plot(range(len(z[1])), z[1], color, label=z[0]) #abbiamo z[0] e z[1] perchè è una tupla (nome indicatore, risultati dell´indicatore)
                         ax1.tick_params(axis='x', labelcolor=color)
                         count+=1
                         labels.append(a)
@@ -926,183 +952,16 @@ class Drawer:
                         labels.append(a)
                         ax2.tick_params(axis='x', labelcolor=color)
                     count+=1
-
+        
+#        ax2 = ax1.twiny()
+#        lab.append(z[0])
+#        a,=ax2.plot(l,z[1], color, label="signals")
         plt.legend(labels, lab)
         fig.tight_layout()
         plt.show()
         
         
-        
-class VolumeExtractor:   
-    def __init__(self, data_extractor, timeperiod, min_distance):
-        self.min_distance = min_distance
-        self.timeperiod = timeperiod
-        self.data_extractor = data_extractor
-        self.values = np.zeros(1)
-        self.name = "Volume"
-        self.value_type = "volume"
-        self.volumes_tuples=[]
-        self.volume_blocks = []
-   
-    
-    def getData(self): 
-        with open("TP"+str(self.timeperiod)+".json") as f:
-            data = json.load(f)
-            for candle in data["TP"+str(self.timeperiod)]:
-                tupla=(float(candle["timestamp"]),float(candle["volume"]))
-                self.volumes_tuples.append(tupla)       
-        self.volumes_tuples.sort(key=lambda tupla: tupla[1])  
-        return self.volumes_tuples
-   
-    
-    def createGroups(self):
-        tupla = self.volumes_tuples[0]
-        block1 = VolumeBlock()
-        block2 = VolumeBlock()
-        block1.last = tupla[0]
-#        block1.first=0
-        block1.candles.append(tupla)
-        block2.first = tupla[0]
-#        block2.last = tupla[0] + (tupla[0]/self.timeperiod)*self.min_distance
-        block2.candles.append(tupla) 
-        self.volume_blocks.append(block1)
-        self.volume_blocks.append(block2)
-        
-        for x in self.volumes_tuples[1:]:
-            timestamp = x[0]
-            for j,y in enumerate(self.volume_blocks):
-                check=False
-                if y.first==None and timestamp<y.last:                               
-                    if ((y.last-timestamp)/60)/self.timeperiod>=self.min_distance:
-                        y.first=timestamp
-                        y.candles.insert(0, x)
-                        check=True
-                    else:
-                        for i,t in enumerate(y.candles):
-                            if timestamp<t[0]:
-                                y.candles.insert(i, x)
-                                check=True
-                                break
-                        if not check:
-                            y.candles.append(x)
-                            check=True
-                            break
-                elif y.last==None and timestamp>y.first:                     
-                    if ((timestamp-y.first)/60)/self.timeperiod>=self.min_distance:
-                        y.last=timestamp
-                        y.candles.append(x)
-                        check=True
-                    else:
-                        for i,t in enumerate(y.candles):
-                            if timestamp<t[0]:
-                                y.candles.insert(i, x)
-                                check=True
-                                break
-                        if not check:
-                            y.candles.append(x)
-                            check=True
-                            break
-                         
-                elif y.first!=None and (0<((timestamp-y.first)/60)/self.timeperiod<self.min_distance):
-                    for i, value in enumerate(y.candles):
-                        if value[0]>timestamp:
-                            y.candles.insert(i,x)
-                            check=True
-                            break
-                   
-
-                    if not check:
-                        y.candles.append(x)
-                        check=True
-                        break  
-                    break
-                
-                elif y.last!=None and (0<((y.last-timestamp)/60)/self.timeperiod<self.min_distance):
-                    for i, value in enumerate(y.candles):
-                        if value[0]>timestamp:
-                            y.candles.insert(i,x)
-                            check=True
-                            break
-                        
-                    if not check:
-                        y.candles.append(x)
-                        check=True
-                        break                        
-                    break 
-                
-                elif y.first!=None and y.last!=None:     
-                    if ((timestamp-y.first)/60)/self.timeperiod>=self.min_distance and ((y.last-timestamp)/60)/self.timeperiod>=self.min_distance:# and j<(len(self.volume_blocks)-1):
-                        new_block=VolumeBlock()
-                        new_block.first=timestamp
-                        new_block.last=y.last
-                        
-                       # new_block.candles.append(x)
-                        y.last=timestamp
-                        #y.candles.append(x)
-                        k=0
-                        for i,t in enumerate(y.candles):
-                            if t[0]>timestamp:
-                                k=i-1
-                                check=True
-                                break
-                        new_block.candles=y.candles[k:]
-                        new_block.candles.insert(0, x)
-                        y.candles=y.candles[:k+1]
-                        y.candles.append(x)
-                        self.volume_blocks.insert(j+1, new_block)
-                        check=True
-                        break
-
-                
-                elif y.first!=None and ((timestamp-y.first)/60)/self.timeperiod>=self.min_distance:
-                    y.last=timestamp
-                    y.candles.append(x)
-                    new_block=VolumeBlock()
-                    new_block.first=timestamp
-                    self.volume_blocks.append(new_block)
-                    check=True
-                    break
-                
-                elif y.last!=None and ((y.last-timestamp)/60)/self.timeperiod>=self.min_distance:
-                    y.first=timestamp
-                    y.candles.insert(0,x)
-                    new_block=VolumeBlock()
-                    new_block.last=timestamp
-                    self.volume_blocks.insert(0,new_block)
-                    check=True
-                    break
-           
-                if check==True:
-                    break       
-   
-    
-    def convertToNP(self):  
-        lista=[]
-        lista_time=[]
-        for group in self.volume_blocks:       
-            for value in group.candles:
-                if group.first==value[0] or group.last==value[0]:
-                    lista.append(0)
-                else:
-                    lista.append(value[1])
-                lista_time.append(value[0])
-        np.array(lista)
-        return lista,lista_time
-       
-    
-    def printGraph(self, lista):        
-        plt.plot(lista)
-        plt.savefig('plot_name.png', dpi = 300)
-        plt.show()
-        
-
-        
-class VolumeBlock:    
-    def __init__(self):
-        self.first = None
-        self.last = None
-        self.candles = []
-
+ 
 
 #if __name__ == "__main__":
 #

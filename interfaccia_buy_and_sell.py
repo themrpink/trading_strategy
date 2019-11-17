@@ -5,7 +5,7 @@ Created on Sun Oct 27 12:31:15 2019
 @author: themr
 """
 import engine
-from PyQt5.QtWidgets import QComboBox, QTableWidget, QTableWidgetItem, QApplication, QWidget, QPushButton, QCalendarWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QLineEdit, QMessageBox, QMainWindow
+from PyQt5.QtWidgets import QCheckBox,QComboBox, QTableWidget, QTableWidgetItem, QApplication, QWidget, QPushButton, QCalendarWidget, QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QLineEdit, QMessageBox, QMainWindow
 from PyQt5.QtCore import pyqtSlot, QDate, Qt
 from PyQt5.QtGui import QIcon, QPixmap
 import sys
@@ -18,6 +18,9 @@ import indicatorWidgets as iw
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import methods
+import methodWidgets as mw
+
 #data_extractor=engine.DataExtractor("")#.Data_extractor()
 
 class Ui_MainWindow(object):
@@ -214,6 +217,11 @@ class Ui_MainWindow(object):
         self.pushButton_plot_buy = QtWidgets.QPushButton(self.tab)
         self.pushButton_plot_buy.setGeometry(QtCore.QRect(790, 330, 93, 28))
         self.pushButton_plot_buy.setObjectName("pushButton_plot_buy")  
+        
+        self.checkButton_wait = QtWidgets.QCheckBox(self.tab)
+        self.checkButton_wait.setGeometry(QtCore.QRect(790, 230, 55, 16))
+        self.checkButton_wait.setObjectName("buy and wait")
+        
         #sell tab
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
@@ -552,6 +560,7 @@ class Ui_MainWindow(object):
         self.pushButton_5.setText(_translate("MainWindow", "Remove layer"))
         self.pushButton_openlayer.setText(_translate("MainWindow", "Open layer"))
         self.pushButton_plot_buy.setText(_translate("MainWindow", "Plot buy strategy"))
+        self.checkButton_wait.setText(_translate("MainWindow", "Buy and Wait"))
         #tabella buy risultati
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Strategia"))
@@ -709,25 +718,18 @@ class Ui_MainWindow(object):
         self.pushButton_save.clicked.connect(self.saveResults)
         self.pushButton_plot_results.clicked.connect(self.plotResults)
 
+
     def plotResults(self):
         print(self.user.risultati)
         ricavi=[]
-        buyAt=[]
-        sellAt=[]
         gain=[]
         inv=[]
         for x in self.user.risultati:
-#            ricavi.append(x["return"])
             inv.append(x["invested"])
-#            sellAt.append(x["price_sell"])
             gain.append(x["gain"])
-#            buyAt.append(x["price_buy"])
         print(ricavi, gain, inv)
-#        plt.plot(np.asarray(ricavi), label="return")
         plt.plot(np.asarray(gain), label="gain")
         plt.plot(np.asarray(inv), label="investment")
-#        plt.plot(np.asarray(buyAt), label="buy price")
-#        plt.plot(np.asarray(sellAt), label="sell price")
         plt.legend()
         plt.show()      
         
@@ -767,14 +769,14 @@ class Ui_MainWindow(object):
     def drawBuyStrategy(self):
         drawer = engine.Drawer(self.data_extractor)
         drawer.drawStrategy(self.date_start,self.date_end)          
+
         
     def drawGraph(self):
         TP=self.lineEdit_TP.text()
         if TP=="" or TP==None:
             TP=1440
         else:
-            TP=int(TP)
-        
+            TP=int(TP)       
         drawer = engine.Drawer(self.data_extractor)
         drawer.drawGraph(TP)    
         
@@ -906,41 +908,57 @@ class Ui_MainWindow(object):
             return "there is a problem <br>with the file format", ""
         
         
-    def launchStrategy(self):   
-        self.engine.lists_for_plot=[]
-        self.data_extractor.indicators_results=[]
+    def launchStrategy(self): 
         
-        strategyList=[]
-#        timedistance = self.date_end-self.date_start
-        for l in self.layers_buy:
-            methodSet=set()
-            for m in l.methods:                
-                methodSet.add(m.instance)
-            strategyList.append(methodSet)
-        self.buyStrategy = engine.Strategy(strategyList)
-        
-        strategyList=[]
-        for l in self.layers_sell:
-            methodSet=set()
-            for m in l.methods:                
-                methodSet.add(m.instance)
-            strategyList.append(methodSet)
-        self.sellStrategy = engine.Strategy(strategyList)
-        
-        self.engine.findBuySignal(self.buyStrategy)
-        self.engine.last_timestamp=self.date_start
-        self.data_extractor.timestamp=self.date_start
-        self.engine.findSellSignal(self.sellStrategy)
-        self.engine.compareBuyAndSell()
-        filename, compared =self.engine.saveResults()
-        engine.drawResults(filename, "buy")
-
-        
-        self.user.calcola(self.engine.completed_strategies,self.filename)
-        self.setDataTables()
-        self.addImage()
-        
-        self.data_extractor.indicators_results=self.engine.lists_for_plot
+        if not self.checkButton_wait.isChecked():
+            self.engine.lists_for_plot=[]
+            self.data_extractor.indicators_results=[]
+            
+            strategyList=[]
+    #        timedistance = self.date_end-self.date_start
+            for l in self.layers_buy:
+                print("layer",l)
+                methodSet=set()
+                for m in l.methods: 
+                    print("method",m)
+                    methodSet.add(m.instance)
+                    print(methodSet)
+                strategyList.append(methodSet)
+            self.buyStrategy = engine.Strategy(strategyList)
+            
+            strategyList=[]
+            for l in self.layers_sell:
+                methodSet=set()
+                for m in l.methods:                
+                    methodSet.add(m.instance)
+                strategyList.append(methodSet)
+            self.sellStrategy = engine.Strategy(strategyList)
+            
+            self.engine.findBuySignal(self.buyStrategy)
+            self.engine.last_timestamp=self.date_start
+            self.data_extractor.timestamp=self.date_start
+            self.engine.findSellSignal(self.sellStrategy)
+            self.engine.compareBuyAndSell()
+            filename, compared =self.engine.saveResults()
+            engine.drawResults(filename, "buy")
+    
+            
+            self.user.calcola(self.engine.completed_strategies,self.filename)
+            self.setDataTables()
+            self.addImage()
+            
+            self.data_extractor.indicators_results=self.engine.lists_for_plot
+        else:
+            strategyList=[]
+            self.data_extractor.indicators_results=[]
+            for l in self.layers_buy:
+                methodSet=set()
+                for m in l.methods:                
+                    methodSet.add(m.instance)
+                strategyList.append(methodSet)
+            self.buyStrategy = engine.Strategy(strategyList)
+            segnali=self.engine.buyAndWait(self.buyStrategy, 50)
+            print(segnali)
 #        print(self.engine.lists_for_plot)
 #        print("*********************************************************************************")
 #        print(self.data_extractor.indicators_results)
@@ -1269,26 +1287,39 @@ class Layer(QWidget):
 #        print(m.name)
         
         
-    @pyqtSlot(str)
-    def insertMethod(self):
-        arg1 = self.combo.currentText()
-        if arg1=="price cross":
-            pcw = PriceCrossWidget(self.data_extractor)
-            self.methods.append(pcw)
-#            pcw.show()
-            
+#    @pyqtSlot(str)
+#    def insertMethod(self):
+           
             
     @pyqtSlot()
     def addMethod(self):
         rowPosition = self.table.rowCount()
-        self.table.insertRow(rowPosition)
-        
+        print(rowPosition)
+        self.table.insertRow(rowPosition)        
         self.table.setItem(rowPosition,0, QTableWidgetItem(self.combo.currentText()))  
-        self.table.setCellWidget(rowPosition,0,PriceCrossWidget(self.data_extractor))
-        print(self.table.cellWidget(rowPosition,0).valido)
-        self.table.setItem(rowPosition,1, QTableWidgetItem(str(self.table.cellWidget(rowPosition,0).valido))) 
+        arg1 = self.combo.currentText()
+        
+        if arg1=="price cross":
+            pcw = PriceCrossWidget(self.data_extractor)
+#            pcw.show()
+#            self.table.setCellWidget(rowPosition,0, pcw)
+            self.table.setItem(rowPosition,1, QTableWidgetItem(str(pcw.valido)))            
+            self.methods.append(pcw)
+            
+        elif arg1=="volume extractor":
+            ve = mw.VolumeExtractorWidget(self.data_extractor)
+#            self.table.setCellWidget(rowPosition,0, ve)
+            self.table.setItem(rowPosition,1, QTableWidgetItem(str(ve.valido)))          
+            self.methods.append(ve)
+            
+        elif arg1=="trend spot":
+            ts = mw.TrendSpotWidget(self.data_extractor)
+#            self.table.setCellWidget(rowPosition,0, ts)
+            self.table.setItem(rowPosition,1, QTableWidgetItem(str(ts.valido)))              
+            self.methods.append(ts)
+            
 #        self.table.setItem(rowPosition,1, QTableWidgetItem("sssss") )
-        self.insertMethod()
+#        self.insertMethod()
 #        self.combo.cu
           
     @pyqtSlot()   
@@ -1310,7 +1341,10 @@ class Layer(QWidget):
     def layerMethods(self):
         selectedRow = self.table.selectedItems()[0]
         rowPosition=selectedRow.row()
-        m = self.methods[rowPosition-1]
+        m = self.methods[rowPosition]
+#        m=self.table.cellWidget(rowPosition,0)
+        print(m)
+        print(m.name)
         m.show()        
  
         
@@ -1323,7 +1357,9 @@ class Layer(QWidget):
 class DevelopedMethods:
     def __init__(self):
         
-        self.methods = [("price cross", engine.PriceCross)]
+        self.methods = [("price cross", engine.PriceCross), 
+                        ("volume extractor", methods.VolumeExtractor),
+                        ("trend spot", methods.TrendSpot)]
         
         
         
@@ -1404,6 +1440,7 @@ class PriceCrossWidget(QWidget):
         
     def getNames(self):
         return [self.indicatorWidget1.instance.name, self.indicatorWidget2.instance.name ]
+    
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Price Cross"))

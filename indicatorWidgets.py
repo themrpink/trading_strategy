@@ -73,3 +73,5 @@ class CandlePriceWidget(QtWidgets.QWidget):
 
         self.instance.name+=" "+self.instance.valueType
         self.close()
+        
+        
