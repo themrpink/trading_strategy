@@ -60,6 +60,9 @@ class CandlePriceWidget(QtWidgets.QWidget):
         
         self.pushButton.clicked.connect(self.setCandlePrice)
         
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.instance.reset(data_extractor)
         
     def setCandlePrice(self):
         if self.radioButton.isChecked():

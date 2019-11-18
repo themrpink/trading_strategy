@@ -910,6 +910,13 @@ class Ui_MainWindow(object):
         
     def launchStrategy(self): 
         
+        for x in self.layers_buy:
+            for y in x.methods:
+                y.reset(self.data_extractor)
+        for x in self.layers_sell:
+            for y in x.methods:
+                y.reset(self.data_extractor)       
+                
         if not self.checkButton_wait.isChecked():
             self.engine.lists_for_plot=[]
             self.data_extractor.indicators_results=[]
@@ -936,7 +943,7 @@ class Ui_MainWindow(object):
             
             self.engine.findBuySignal(self.buyStrategy)
             self.engine.last_timestamp=self.date_start
-            self.data_extractor.timestamp=self.date_start
+#            self.data_extractor.timestamp=self.date_start
             self.engine.findSellSignal(self.sellStrategy)
             self.engine.compareBuyAndSell()
             filename, compared =self.engine.saveResults()
@@ -972,7 +979,7 @@ class Ui_MainWindow(object):
         
         self.data_extractor.TP_files={}
         self.data_extractor.TP_files_csv={}
-        self.data_extractor.timestamp=self.date_start  
+#        self.data_extractor.timestamp=self.date_start  
         
         
     def addImage(self):
@@ -1108,7 +1115,7 @@ class Ui_MainWindow(object):
         if check:
             self.engine=engine.Engine(self.lineEdit.text(), self.data_extractor)
             self.engine.last_timestamp=self.date_start
-            self.data_extractor.timestamp=self.date_start
+#            self.data_extractor.timestamp=self.date_start
             self.label_file.setText(_translate("MainWindow", "File created successfully"))            
         else:
             self.label_file.setText(_translate("MainWindow", "File could not be created, please retry"))
@@ -1475,7 +1482,10 @@ class PriceCrossWidget(QWidget):
         elif int(i)==2:
             self.indicatorWidget2.show()
             
-            
+    
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.instance.reset(data_extractor)
             
     def instantiateMethod(self):       
         if not self.radioButton.isChecked() and not self.radioButton_2.isChecked():
@@ -1591,6 +1601,10 @@ class SMAWidget(QWidget):
         self.radioButton.setText(_translate("Form", "open"))
         
         self.pushButton.clicked.connect(self.setSMA)
+        
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.instance.reset(data_extractor)
         
     def setSMA(self):
         t=self.lineEdit.text()

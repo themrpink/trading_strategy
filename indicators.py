@@ -16,6 +16,9 @@ class CandlePrice:
         self.data_extractor=data_extractor
         self.valueType="close"
         self.name="CandlePrice"
+    
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
         
     def getData(self, timestamp, TP):
         self.filename="TP"+str(TP)+"_from_dictionary.csv"      

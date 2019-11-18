@@ -222,7 +222,7 @@ class Engine:
         with open(self.name+"_compared.txt", "w") as f:
             for x in self.completed_strategies:
                 f.write(str(x))
-     
+        print(self.lists_for_plot)
         return self.name+".json",self.name+"_compared.txt"
     
 class Strategy:
@@ -287,14 +287,18 @@ class Strategy:
 class PriceCross():
     
     def __init__(self): #viene istanziato con due array di dati da due indicatori
-        self.indicator1= ""#indicator1  #istanza dell´indicatore
+        self.indicator1 = ""#indicator1  #istanza dell´indicatore
         self.indicator2 =""# indicator2
-        self.ind1=""#indicator1.values  #array dell´indicatore
-        self.ind2=""#indicator2.values 
+        self.ind1= ""#indicator1.values  #array dell´indicatore
+        self.ind2= ""#indicator2.values 
         self.crossType =""# crossType   #"above" o "below" a seconda che si cerchi un cross che sale o che scende di ind1 su ind2
         self.TP=""#TP
 #    def getData(self, timestamp):
 #        
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.ind1= ""
+        self.ind2= ""
         
     def execute(self, last_timestamp):      
         self.ind1=self.indicator1.getData(last_timestamp, self.TP)
@@ -306,10 +310,7 @@ class PriceCross():
         i_df=self.indicator1.df.index[0]
         diz={}
         while True:
-#            print("check indici")
-#            print(len(self.ind1))
-#            print(len(self.ind2))
-#            print(i)
+
             if i>=len(self.ind1)  or len(self.ind1)<=1 or i>=len(self.ind2) or len(self.ind2)<=1:
                 print("ok no crossed")
                 timestamp= int(self.indicator1.df.at[i_df+i-1, "timestamp"])
@@ -333,7 +334,6 @@ class PriceCross():
                      #  "date": self.indicator1.diz["date"].item(i),
                        "timestamp": int(self.indicator1.df.at[i_df+i, "timestamp"])}
 
-#                       "timestamp": self.indicator1.diz2["timestamp"][i]}
                 timestamp= int(self.indicator1.df.at[i_df+i, "timestamp"])
 
                 return True, diz, timestamp, list_for_plot          #torna true se ind1 passa sopra a ind2
@@ -365,134 +365,31 @@ class SMAClass:
 #        self.data_list = data_extractor.data
         self.value_type="close"
        # self.diz= self.setDataList()
-        self.diz2= {}
-        self.array=[]
+#        self.diz2= {}
+#        self.array=[]
         self.df=""
-#    def getData(self, timestamp, TP):
-##        self.timeperiod=TP
-#        TP=int(TP)
-##        self.name+=" "+str(self.timeperiod)
-#  
-#        print("metodo getData dell indicatore, riga 221")
-#        if int(timestamp) > int(self.data_extractor.timestamp):
-#            print("aggiornato timestamp: vecchio="+str(timestamp)+" nuovo=")
-#            timestamp=self.data_extractor.updateFile(timestamp)
-#            print(timestamp)
-#        else:
-#            print("il timestamp non è maggiore, riga 228")
-#            print(str(timestamp)+"   "+str(self.data_extractor.timestamp))
-#        filename=self.data_extractor.updated_file
-#        print("controllo nome file in getData")
-#        print(self.data_extractor.updated_file)
-#        if filename == "":
-#            filename=self.data_extractor.file
-#        print("il file da cui generare le candele ha nome: , riga 234")
-#        print(filename)
-##        if not self.data_extractor.file_opened:
-#        self.data_extractor.createTPFromRawFile(filename, TP, timestamp)
-##            self.data_extractor.file_opened=True
-#        
-#        print("apri il file "+ "TP"+str(TP)+".json nell indicatore, riga 239")
-#        print("file size, rga 240")
-#        print(str(os.path.getsize("TP"+str(TP)+".json")))
-#        c = CandleExtractor("TP"+str(TP)+".json")
-#        self.df, timestamp=c.creaDiz( TP, timestamp)
-#        return self.df, timestamp
-#    
+
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.values = np.zeros(1)
+        self.df=""
+        
+        
     def getData(self, timestamp, TP):
 #        self.timeperiod=TP
         TP=int(TP)
 
-        filename=self.data_extractor.file
-        self.data_extractor.createTPFromRawFile(filename, TP)
+#        filename=self.data_extractor.file
+        self.data_extractor.createTPFromRawFile(TP)
         c = CandleExtractor("TP"+str(TP)+"_from_dictionary.csv")
 #        c = CandleExtractor("TP"+str(TP)+".json")
         self.df, timestamp=c.creaDiz( TP, timestamp)
-#        return self.df, timestamp
-#    
-#        
-##    def storeData(self):
-##        with open("store.json", "w") as f:
-##            json.dump(self.data_list, f)         
-#        
-# 
-##    def getDataFromDateToDate(self, begin, end):
-##        self.data_list = self.data.selectPeriodFromDates(begin, end)
-##        
-##    def getOutput(self):
-##        self.values = tl.SMA(self.diz[self.value_type], timeperiod=self.timeperiod)
-##        return self.values
-#    
-#    def getOutput2(self):
-#        print(self.diz2[self.value_type])
-#        self.values = tl.SMA(self.diz2[self.value_type], timeperiod=self.timeperiod)
-#        self.array= tl.SMA(self.diz2[self.array], timeperiod=self.timeperiod)
+
         self.values = tl.SMA(self.df[self.value_type].astype(float).values, timeperiod=self.timeperiod)
-#        print("queste sono le values restituite dell indicatore:, riga 436")
-#        print(self.values)
-#        self.data_extractor.indicators_results.append(self.values)
+
         return self.values.tolist()
 
 
-#class CandleExtractor:
-#    def __init__(self, filename):
-#        self.filename=filename
-#       
-##        self.TP=TP
-##        self.timestamp=timestamp
-##        self.diz2={}
-##        self.creaDiz(self.TP, self.timestamp)
-#        
-#    def creaDiz(self, TP, timestamp):
-#        with open("TP"+str(TP)+".json") as f:
-#            data = json.load(f)
-#            
-##            print(data)
-##            n=len(data["TP"+str(TP)])
-##            print(n)
-##            i=0
-##            diz ={"date": [], 
-##                  "timestamp": [],
-##                  "open": [],
-##                  "close":[], 
-##                  "high": [], 
-##                  "low": [], 
-##                  "volume": [], 
-##                  "average": [],
-##                  "direction": []}
-#            df = pd.DataFrame(data["TP"+str(TP)])
-#            df['timestamp'] = df['timestamp'].astype(int)
-##            print("aggiungi i valori dell indicatore nei numpy arrays, riga 245")
-##            self.indicator.array = np.array([[d[self.indicator.value_type]] for d in data["TP"+str(TP)]])
-##            for candle in data["TP"+str(TP)]:
-##                diz["date"].append(candle["date"])
-##                diz["timestamp"].append(float(candle["timestamp"]))
-##                diz["open"].append(float(candle["open"]))
-##                diz["close"].append(float(candle["close"]))
-##                diz["low"].append(float(candle["low"]))
-##                diz["volume"].append(float(candle["volume"]))
-##                diz["average"].append(float(candle["average"]))
-##                diz["direction"].append(float(candle["direction"]))
-##                i+=1  
-##                
-##            print("converti in numpy array - inizio, riga 293")        
-##            diz["date"]=np.array(diz["date"])
-##            diz["timestamp"]=np.array(diz["timestamp"])
-##            diz["open"]=np.array(diz["open"])
-##            diz["close"]=np.array(diz["close"])
-##            diz["low"]=np.array(diz["low"])
-##            diz["volume"]=np.array(diz["volume"])
-##            diz["average"]=np.array(diz["average"])
-##            diz["direction"]=np.array(diz["direction"])
-##            print("converti in numpy array - fine, riga 301")
-##            print("crea il file myarray.csv, riga 302")
-##            np.savetxt("myArray.csv", diz["open"])
-#            
-#            print("salva il diz2")
-##            self.diz2=diz
-##            print(diz)
-#            return df, timestamp
-##            return diz, timestamp
          
 class CandleExtractor:
     def __init__(self, filename):
@@ -502,11 +399,7 @@ class CandleExtractor:
         df = pd.read_csv("TP"+str(TP)+"_from_dictionary.csv")
         df['timestamp'] = df['timestamp'].astype(int)  
         mask = df['timestamp'].values > timestamp
-#        with open("TP"+str(TP)+".json", "r") as f:
-#            data = json.load(f)
-#            df = pd.DataFrame(data["TP"+str(TP)])
-#            df['timestamp'] = df['timestamp'].astype(int)         
-#            mask = df['timestamp'].values > timestamp
+
         return df[mask], timestamp
         
         
@@ -515,12 +408,12 @@ class CandleExtractor:
 class DataExtractor:
     def __init__(self, file, ts_start=0, ts_end=0, filename="new_file.csv"):
         self.file=file
-        self.data= ""#self.extractData()
+#        self.data= ""#self.extractData()
         self.TP_files = {}
         self.TP_files_csv = {}
-        self.updated_file = ""
-        self.timestamp = "0"
-        self.file_opened=False
+#        self.updated_file = ""
+#        self.timestamp = "0"
+#        self.file_opened=False
         self.ts_start=float(ts_start)
         self.ts_end=float(ts_end)
 #        self.setFile()
@@ -528,6 +421,9 @@ class DataExtractor:
         self.indicators_results=[]
         self.createdFiles=[]    #contiene i nomi del file csv già creati
         self.signals=[]
+    
+    
+    
     def setFile(self):
         print("lanciato il setFile")
         if self.ts_end==0:
@@ -556,67 +452,69 @@ class DataExtractor:
                         ts=float(ts.replace("\"", ""))
                     print("creato "+self.filename)      
             self.file=self.filename
+            return True
+        
         except:
             traceback.print_exc()
             print("errore nella creazione del file")
             return False
         
-        return True
+        
 #        self.file=self.filename
         
-    def updateFile(self, timestamp): 
-        
-        print("update del file")
-        data=""
-        filename=""
-        line=""
-        if self.updated_file=="":
-            print("prima volta, apro il file principale, riga 380")
-            filename=self.file
-        else:
-            filename="updated_file.csv"
-            self.updated_file="updated_file.csv"
-            print("è stato aggiornato il nome del file a upgrade_file.json, riga 385")
-        print("apro il file "+filename)
-        with open(filename) as f:            
-            line = f.readline()
-            if line.split(",")[0].replace("\"","")=="":
-                return self.timestamp
-            actual_timestamp = (line.split(",")[0].replace("\"",""))
-            actual_timestamp=int(actual_timestamp)
-            print("sta leggendo il file, riga 395")
-            print("timestamp trasmesso:, riga 396")
-            print(timestamp)
-            print("timestamp attuale/iniziale del file:")
-            print(actual_timestamp)
-            while actual_timestamp<int(timestamp):
-                line = f.readline()
-    #                if line=="":
-    #                    break
-                actual_timestamp = int(line.split(",")[0].replace("\"",""))  
-            
-#            data=f.readlines()
-            data=f.read()
-            print("file letto")
-            print("timestamp a fine lettura:, riga 409")
-            print(actual_timestamp)
-            self.timestamp=actual_timestamp
-            print("timestamp aggiornato, riga 412")
-            print("grandezza del data estratto dal file: , riga 413:")
-            print(len(data))
-        self.updated_file="updated_file.csv"
-        filename="updated_file.csv"
-        with open(filename, "w") as f:
-            print("sta scrivendo il file, riga 418")
-            print(filename)
-            for x in data:
-                f.write(x)
-#            f.write(data)
-            print("è stato scritto il file, linea 422")
-        return self.timestamp#self.updated_file#, end
-        
+#    def updateFile(self, timestamp): 
+#        
+#        print("update del file")
+#        data=""
+#        filename=""
+#        line=""
+#        if self.updated_file=="":
+#            print("prima volta, apro il file principale, riga 380")
+#            filename=self.file
+#        else:
+#            filename="updated_file.csv"
+#            self.updated_file="updated_file.csv"
+#            print("è stato aggiornato il nome del file a upgrade_file.json, riga 385")
+#        print("apro il file "+filename)
+#        with open(filename) as f:            
+#            line = f.readline()
+#            if line.split(",")[0].replace("\"","")=="":
+#                return self.timestamp
+#            actual_timestamp = (line.split(",")[0].replace("\"",""))
+#            actual_timestamp=int(actual_timestamp)
+#            print("sta leggendo il file, riga 395")
+#            print("timestamp trasmesso:, riga 396")
+#            print(timestamp)
+#            print("timestamp attuale/iniziale del file:")
+#            print(actual_timestamp)
+#            while actual_timestamp<int(timestamp):
+#                line = f.readline()
+#    #                if line=="":
+#    #                    break
+#                actual_timestamp = int(line.split(",")[0].replace("\"",""))  
+#            
+##            data=f.readlines()
+#            data=f.read()
+#            print("file letto")
+#            print("timestamp a fine lettura:, riga 409")
+#            print(actual_timestamp)
+#            self.timestamp=actual_timestamp
+#            print("timestamp aggiornato, riga 412")
+#            print("grandezza del data estratto dal file: , riga 413:")
+#            print(len(data))
+#        self.updated_file="updated_file.csv"
+#        filename="updated_file.csv"
+#        with open(filename, "w") as f:
+#            print("sta scrivendo il file, riga 418")
+#            print(filename)
+#            for x in data:
+#                f.write(x)
+##            f.write(data)
+#            print("è stato scritto il file, linea 422")
+#        return self.timestamp#self.updated_file#, end
+#        
 
-    def createTPFromRawFile(self, file, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
+    def createTPFromRawFile(self, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
         print("chiamato createTPFfromRawFile")
         if not "TP"+str(tpValue) in self.TP_files:# or int(timestamp)>=int(self.timestamp):
 #            self.timestamp=timestamp
@@ -625,7 +523,8 @@ class DataExtractor:
             csv_content = [["timestamp","date","open","close","high","low","volume","average","direction"]]
 #            print("apertura del file principale, nome file: , riga 439") 
 #            print(file)
-            with open(file) as f:
+            
+            with open(self.file) as f:
                 candle_data = []      
                 first_line=f.readline()
 #                first_line=first_line.replace("\"\n","")
@@ -676,6 +575,7 @@ class DataExtractor:
                 writer.writerows(json_content["TP"+str(tpValue)])
                 self.createdFiles.append("TP"+str(tpValue)+"_from_dictionary.csv")
         return self.TP_files["TP"+str(tpValue)]
+
     
     def createFile(self, file, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
         print("chiamato createFile")
@@ -819,23 +719,7 @@ class DataExtractor:
 #        self.data=btc_list
         return btc_list
             
-#    def selectPeriodFromDates(self, begin, end):    
-#        timestamp_begin = datetime.strptime(begin, "%Y-%m-%d")
-#        timestamp_end = datetime.strptime(end, "%Y-%m-%d")
-#        timestamp_begin = datetime.timestamp(timestamp_begin)
-#        timestamp_end = datetime.timestamp(timestamp_end)
-#        indice_iniziale = self.searchDates(self.data, timestamp_begin , 0, len(self.data))
-#        indice_finale = self.searchDates(self.data,timestamp_end , 0, len(self.data))
-#        return self.data[indice_iniziale:indice_finale]
-#  
-#    def selectPerdiodFromTimestamp(self, begin, end):
-#        timestamp_begin = datetime.strptime(begin, "%Y-%m-%d")
-#        timestamp_end = datetime.strptime(end, "%Y-%m-%d")
-#        timestamp_begin = datetime.timestamp(timestamp_begin)
-#        timestamp_end = datetime.timestamp(timestamp_end)
-#        indice_iniziale = self.searchDates(self.data, timestamp_begin , 0, len(self.data))
-#        indice_finale = self.searchDates(self.data,timestamp_end , 0, len(self.data))
-#        return self.data[indice_iniziale:indice_finale] 
+
     
     ##########################################################
     def createTimePeriod(self, timeperiod, begin, end):
@@ -858,10 +742,10 @@ class DataExtractor:
         else:
             return i
         
-    def extraxtAllDataInJson(self, filename):
-        with open(filename, "w") as f:
-            for x in self.data:
-                json.dump(x, f) 
+#    def extraxtAllDataInJson(self, filename):
+#        with open(filename, "w") as f:
+#            for x in self.data:
+#                json.dump(x, f) 
 
                 
                 
@@ -933,6 +817,16 @@ class Drawer:
         labels=[]
         lab=[]
         fig, ax1 = plt.subplots()
+        data=""
+        try:
+            with open("saved_trendspot.txt", "r") as f:
+                data=f.read()
+                data=data.split(",")
+                data.reverse()
+            li = np.array(data)
+        except:
+            pass
+        print(li)
         for x in self.data_extractor.indicators_results:
             for y in x:
                 for z in y:
@@ -952,10 +846,11 @@ class Drawer:
                         labels.append(a)
                         ax2.tick_params(axis='x', labelcolor=color)
                     count+=1
-        
-#        ax2 = ax1.twiny()
-#        lab.append(z[0])
-#        a,=ax2.plot(l,z[1], color, label="signals")
+        if data!="":
+            ax2 = ax1.twiny()
+            lab.append("trend")
+            a,=ax2.plot(range(len(li)),li,colors[(count-1)%7], label="trendSpot")
+            labels.append(a)
         plt.legend(labels, lab)
         fig.tight_layout()
         plt.show()

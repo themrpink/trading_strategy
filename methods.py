@@ -7,8 +7,6 @@ Created on Fri Nov  8 16:16:27 2019
 import numpy as np
 import json
 import matplotlib.pyplot as plt
-import time
-import datetime
 
 class VolumeExtractor:   
     def __init__(self, data_extractor):
@@ -21,6 +19,12 @@ class VolumeExtractor:
         self.volumes_tuples=[]
         self.volume_blocks = []
    
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.volumes_tuples=[]
+        self.volume_blocks = []
+
+        
     def execute(self, timestamp):
         self.getData()
         self.createGroups()
@@ -189,13 +193,18 @@ class VolumeBlock:
         self.candles = []
 
 
-class  TrendSpot:
+class TrendSpot:
     def __init__(self, data_extractor):
         self.data_extractor = data_extractor
         self.TP=240
         self.raggio=10
         self.tolleranza = 0.5
         self.trend=False
+        self.dati_per_plot=[]   
+        
+    def reset(self, data_extractor):
+        self.data_extractor=data_extractor
+        self.dati_per_plot=[] 
         
     def execute(self, timestamp):
         dati_raggio=[]
@@ -205,10 +214,11 @@ class  TrendSpot:
             data = json.load(f)
             i=1     
             j=0
-            for k,candle in enumerate(data["TP"+str(self.TP)]):
+            for k,candle in enumerate(data["TP"+str(self.TP)]): #riprende dal timestamp passato come argomento
                 if int(candle["timestamp"]) >= int(timestamp):
                     j=k
                     break
+                
             print(len(data["TP"+str(self.TP)]))
             for candle in data["TP"+str(self.TP)][j:]:
                 if i==int(self.raggio):
@@ -222,35 +232,48 @@ class  TrendSpot:
                     dati_raggio.append((0, candle["date"]))
                 else:
                     new_high=high-media
-#                    new_low=0
                     new_close=close-media
                     perc=new_close/new_high
                     dati_raggio.append((perc,candle["date"])) 
                 i+=1
             print(len(data["TP"+str(self.TP)]))
-            for candle in data["TP"+str(self.TP)][j+int(self.raggio):]:
-                dati_raggio=dati_raggio[1:]
-                low=float(candle["low"])
-                high=float(candle["high"])
-                close=float(candle["close"])
-                media=(low+high)/2
-                self.timestamp=int(candle["timestamp"])
-                if close==media:
-                    dati_raggio.append((0,candle["date"]))
-                else:
-                    new_high=high-media
-#                    new_low=0
-                    new_close=close-media
-                    perc=new_close/new_high
-                    dati_raggio.append((perc,candle["date"]))              
-                    
-                check, date = self.checkRaggio(dati_raggio)
-                if check:
-#                    timestamp=datetime.datetime.timestamp(datetime.datetime.strptime(date,'%Y-%m-%d %H:%M:%S'))
-                    print(self.timestamp)
-                    return True, {"result": "SpotTrend found a trend","method-name":"TrendSpot","timestamp":self.timestamp, "tolleranza":self.tolleranza, "raggio":self.raggio, "date":date, "timeperiod":self.TP}, timestamp ,[date]
+            if len(data["TP"+str(self.TP)])>j+int(self.raggio):
+                for candle in data["TP"+str(self.TP)][j+int(self.raggio):]:
+                    dati_raggio=dati_raggio[1:]
+                    low=float(candle["low"])
+                    high=float(candle["high"])
+                    close=float(candle["close"])
+                    media=(low+high)/2
+                    self.timestamp=int(candle["timestamp"])
+                    if close==media:
+                        dati_raggio.append((0,candle["date"]))
+                    else:
+                        new_high=high-media
+    #                    new_low=0
+                        new_close=close-media
+                        perc=new_close/new_high
+                        dati_raggio.append((perc,candle["date"]))              
+                        
+                    check, date = self.checkRaggio(dati_raggio)
+                    if check:
+    #                    timestamp=datetime.datetime.timestamp(datetime.datetime.strptime(date,'%Y-%m-%d %H:%M:%S'))
+                        print(self.timestamp)
+                        return True, {"result": "SpotTrend found a trend",
+                                      "method-name":"TrendSpot",
+                                      "timestamp":self.timestamp, 
+                                      "tolleranza":self.tolleranza, 
+                                      "raggio":self.raggio, 
+                                      "date":date, 
+                                      "timeperiod":self.TP}, timestamp ,[("TrendSpot",date)]
+            else:
+                print("arrivati al termine della lista di candele, riga 261 methods.py")
 #        timestamp=datetime.datetime.timestamp(datetime.datetime.strptime(date,'%Y-%m-%d %H:%M:%S'))
-        return False, {"result": "SpotTrend didn´t found a trend","method-name":"TrendSpot","timestamp":self.timestamp,"tolleranza":self.tolleranza, "raggio":self.raggio, "timeperiod":self.TP}, timestamp ,[date]
+        return False, {"result": "SpotTrend didn´t found a trend",
+                       "method-name":"TrendSpot",
+                       "timestamp":self.timestamp,
+                       "tolleranza":self.tolleranza, 
+                       "raggio":self.raggio, 
+                       "timeperiod":self.TP}, timestamp ,[("TrendSpot",date)]
 #    
 #        except:
 #            print("c´é stato un errore, lancio createFile e rilancio execute di TrendSpot")
@@ -266,13 +289,85 @@ class  TrendSpot:
         l=len(raggio)
         if value/l>=float(self.tolleranza):
             self.trend=True
-            print(raggio[0][1],raggio[-1][1])
+#            print(raggio[0][1],raggio[-1][1])
         else:
             self.trend=False
         
         return self.trend, raggio[-1][1]
 
     
+    def drawAndSave(self):
+        filename="saved_trendspot"
+        self.filename=filename
+        self.dati_per_plot=[] 
+        dati_raggio=[]
+        if self.data_extractor=="":
+            return
+        if self.data_extractor.checkTPFile(self.TP):
+            with open("TP"+str(self.TP)+".json") as f:
+                data = json.load(f)
+                i=1
+                j=0
+                for candle in data["TP"+str(self.TP)][j:]:
+                    if i==int(self.raggio):
+                        self.checkRaggio(dati_raggio)
+                        break
+                    low=float(candle["low"])
+                    high=float(candle["high"])
+                    close=float(candle["close"])
+                    media=(low+high)/2
+                    if close==media:
+                        dati_raggio.append((0, candle["date"]))
+                    else:
+                        new_high=high-media
+                        new_close=close-media
+                        perc=new_close/new_high
+                        dati_raggio.append((perc,candle["date"])) 
+                    i+=1
+                print(len(data["TP"+str(self.TP)]))
+                if len(data["TP"+str(self.TP)])>j+int(self.raggio):
+                    for candle in data["TP"+str(self.TP)][j+int(self.raggio):]:
+                        dati_raggio=dati_raggio[1:]
+                        low=float(candle["low"])
+                        high=float(candle["high"])
+                        close=float(candle["close"])
+                        media=(low+high)/2
+                        self.timestamp=int(candle["timestamp"])
+                        if close==media:
+                            dati_raggio.append((0,candle["date"]))
+                        else:
+                            new_high=high-media
+        #                    new_low=0
+                            new_close=close-media
+                            perc=new_close/new_high
+                            dati_raggio.append((perc,candle["date"]))              
+                            
+                        check, date = self.checkRaggio(dati_raggio)
+                        if check:
+                            self.dati_per_plot.append(float(candle["close"]))
+                        else:
+                            self.dati_per_plot.append(0)
+                            
+            with open(filename+".txt", "w") as f:
+                for x in self.dati_per_plot:
+                    f.writelines(str(x)+",")
+#                f.writelines(self.dati_per_plot)
+         
+            plt.plot(np.array(self.dati_per_plot))
+            plt.savefig(filename+".png", dpi = 300)
+            plt.show()
+            print(self.dati_per_plot)
+            return self.dati_per_plot
+        else:
+#            try:
+            print("retry and go", filename)
+            self.data_extractor.createTPFromRawFile(self.TP)
+#                self.drawAndSave()
+#            except:
+#                print("error")
+#                return
+            
+            
 if __name__ == "__main__":
     cr = TrendSpot()
     cr.TP=240

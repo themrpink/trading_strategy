@@ -8,6 +8,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QWidget, QMessageBox
 import methods 
 from PyQt5 import QtWidgets
+from functools import partial
 
 class TrendSpotWidget(QWidget):
     def __init__(self, data_extractor):
@@ -58,6 +59,18 @@ class TrendSpotWidget(QWidget):
         self.label_5.setGeometry(QtCore.QRect(250, 210, 121, 21))
         self.label_5.setObjectName("label_5")
 
+        self.label_6 = QtWidgets.QLabel(Form)
+        self.label_6.setGeometry(QtCore.QRect(150, 360, 130, 20))
+        self.label_6.setObjectName("label_6")
+#        self.lineEdit_4 = QtWidgets.QLineEdit(Form)
+#        self.lineEdit_4.setGeometry(QtCore.QRect(150, 390, 130, 22))
+#        self.lineEdit_4.setText("")
+#        self.lineEdit_4.setObjectName("lineEdit_4")
+        self.drawGraphButton = QtWidgets.QPushButton(Form)
+        self.drawGraphButton.setGeometry(QtCore.QRect(150, 420, 190, 28))
+        self.drawGraphButton.setObjectName("pushButton")
+        
+        
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
@@ -69,14 +82,20 @@ class TrendSpotWidget(QWidget):
         self.label_3.setText(_translate("Form", "Raggio"))
         self.label_4.setText(_translate("Form", "Tolleranza"))
         self.label_5.setText(_translate("Form", "(Valore tra -1 e +1)"))
-
+        self.label_6.setText(_translate("Form", "save data as:"))
+        self.drawGraphButton.setText(_translate("Form", "draw graph and save data"))
         self.setActions()
         
     def setActions(self):
         self.buttonBox.accepted.connect(self.instantiateMethod)
         self.buttonBox.rejected.connect(self.close)
+        self.drawGraphButton.clicked.connect(self.instance.drawAndSave)
 
-
+    def reset(self, data_extractor):
+        self.instance.reset(data_extractor)
+        self.data_extractor=data_extractor
+        
+        
     def instantiateMethod(self):     
 #        try:
         if len(self.lineEdit.text())==0 or len(self.lineEdit_2.text())==0:
@@ -170,6 +189,11 @@ class VolumeExtractorWidget(QWidget):
         instance.TP=int(self.lineEdit.text()) 
         instance.distance=int(self.lineEdit_2.text())
         instance.printGraph()
+       
+    def reset(self, data_extractor):
+        self.instance.reset(data_extractor)
+        self.data_extractor=data_extractor
+        
         
     def instantiateMethod(self):     
 #        try:
