@@ -215,13 +215,22 @@ class Ui_MainWindow(object):
         self.label_13.setObjectName("label_13")
   
         self.pushButton_plot_buy = QtWidgets.QPushButton(self.tab)
-        self.pushButton_plot_buy.setGeometry(QtCore.QRect(790, 330, 93, 28))
+        self.pushButton_plot_buy.setGeometry(QtCore.QRect(790, 330, 123, 38))
         self.pushButton_plot_buy.setObjectName("pushButton_plot_buy")  
         
-        self.checkButton_wait = QtWidgets.QCheckBox(self.tab)
-        self.checkButton_wait.setGeometry(QtCore.QRect(790, 230, 55, 16))
-        self.checkButton_wait.setObjectName("buy and wait")
+        self.pushButton_plot_objects = QtWidgets.QPushButton(self.tab)
+        self.pushButton_plot_objects.setGeometry(QtCore.QRect(790, 380, 123, 38))
+        self.pushButton_plot_objects.setObjectName("pushButton_plot_objects")          
         
+        self.checkButton_wait = QtWidgets.QCheckBox(self.tab)
+        self.checkButton_wait.setGeometry(QtCore.QRect(790, 230, 115, 16))
+        self.checkButton_wait.setObjectName("buy and wait")
+        self.lineEdit_wait_distance = QtWidgets.QLineEdit(self.tab)
+        self.lineEdit_wait_distance.setGeometry(QtCore.QRect(790, 260, 41, 22))
+        self.lineEdit_wait_distance.setObjectName("lineEdit_wait_distance")
+        self.label_wait= QtWidgets.QLabel(self.tab)
+        self.label_wait.setGeometry(QtCore.QRect(850, 260, 115, 22))
+        self.label_wait.setObjectName("label_7")
         #sell tab
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
@@ -560,7 +569,9 @@ class Ui_MainWindow(object):
         self.pushButton_5.setText(_translate("MainWindow", "Remove layer"))
         self.pushButton_openlayer.setText(_translate("MainWindow", "Open layer"))
         self.pushButton_plot_buy.setText(_translate("MainWindow", "Plot buy strategy"))
+        self.pushButton_plot_objects.setText(_translate("MainWindow", "Plot objects"))
         self.checkButton_wait.setText(_translate("MainWindow", "Buy and Wait"))
+        self.label_wait.setText(_translate("MainWindow", "wait distance"))
         #tabella buy risultati
         item = self.tableWidget_2.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Strategia"))
@@ -694,6 +705,7 @@ class Ui_MainWindow(object):
         self.pushButton_draw_candles.clicked.connect(self.drawCandles)#
         self.pushButton_draw_graph.clicked.connect(self.drawGraph)
         self.pushButton_plot_buy.clicked.connect(self.drawBuyStrategy)
+        self.pushButton_plot_objects.clicked.connect(self.drawObjects)
         #crea e rimuovi e  apri layers nella tabella
         self.pushButton_2.clicked.connect(partial(self.addLayer, tag=1))
         self.pushButton_7.clicked.connect(partial(self.addLayer, tag=2))
@@ -718,7 +730,14 @@ class Ui_MainWindow(object):
         self.pushButton_save.clicked.connect(self.saveResults)
         self.pushButton_plot_results.clicked.connect(self.plotResults)
 
-
+    def drawObjects(self):
+        for x in self.data_extractor.result_objects:
+            print(x.name)
+            print(len(x.x))
+            print(len(x.y))
+            x.plot()
+            plt.show()
+            
     def plotResults(self):
         print(self.user.risultati)
         ricavi=[]
@@ -964,8 +983,10 @@ class Ui_MainWindow(object):
                     methodSet.add(m.instance)
                 strategyList.append(methodSet)
             self.buyStrategy = engine.Strategy(strategyList)
-            segnali=self.engine.buyAndWait(self.buyStrategy, 50)
-            print(segnali)
+            distance = self.lineEdit_wait_distance.text()
+            self.segnali, self.results=self.engine.buyAndWait(self.buyStrategy, distance)
+#            engine.drawResults(filename, "buy")
+            self.setDataTables(wait=True)
 #        print(self.engine.lists_for_plot)
 #        print("*********************************************************************************")
 #        print(self.data_extractor.indicators_results)
@@ -987,7 +1008,7 @@ class Ui_MainWindow(object):
         self.label_img.setPixmap(pixmap)
         self.label_img.setPixmap(pixmap.scaled(self.label_img.size())) 
         
-    def setDataTables(self):
+    def setDataTables(self, wait=False):
 
         buy=self.engine.buy_results
         sell=self.engine.sell_results
@@ -1037,19 +1058,50 @@ class Ui_MainWindow(object):
             self.tableWidget_2.setItem(rowPosition,3, QTableWidgetItem(str(succ)))
 
         sell.sort(key=lambda x : x["timestamp"])
-        for strategy in sell:
-            strategy_name=strategy["strategy"]
-            timestamp=strategy["timestamp"]
-            date=str(datetime.datetime.fromtimestamp(int(timestamp)))
-            succ=strategy["succeded"]
-            rowPosition = self.tableWidget_1.rowCount()
-            self.tableWidget_1.insertRow(rowPosition)
-            self.tableWidget_1.setItem(rowPosition,0, QTableWidgetItem(strategy_name))
-            self.tableWidget_1.setItem(rowPosition,1, QTableWidgetItem(date))
-            self.tableWidget_1.setItem(rowPosition,2, QTableWidgetItem(str(timestamp)))
-            self.tableWidget_1.setItem(rowPosition,3, QTableWidgetItem(str(succ)))         
+        if not wait:
+            for strategy in sell:
+                strategy_name=strategy["strategy"]
+                timestamp=strategy["timestamp"]
+                date=str(datetime.datetime.fromtimestamp(int(timestamp)))
+                succ=strategy["succeded"]
+                rowPosition = self.tableWidget_1.rowCount()
+                self.tableWidget_1.insertRow(rowPosition)
+                self.tableWidget_1.setItem(rowPosition,0, QTableWidgetItem(strategy_name))
+                self.tableWidget_1.setItem(rowPosition,1, QTableWidgetItem(date))
+                self.tableWidget_1.setItem(rowPosition,2, QTableWidgetItem(str(timestamp)))
+                self.tableWidget_1.setItem(rowPosition,3, QTableWidgetItem(str(succ)))         
             
-            
+        if wait:
+            i=1
+            for sell_signal in self.segnali:
+                strategy_name="buy and wait - average price - "+str(i)
+                i+=1
+                timestamp=sell_signal[0]
+                date=str(datetime.datetime.fromtimestamp(int(timestamp)))
+                sell_price = float(sell_signal[1])
+                rowPosition = self.tableWidget_1.rowCount()
+                self.tableWidget_1.insertRow(rowPosition)
+                self.tableWidget_1.setItem(rowPosition,0, QTableWidgetItem(strategy_name))
+                self.tableWidget_1.setItem(rowPosition,1, QTableWidgetItem(date))
+                self.tableWidget_1.setItem(rowPosition,2, QTableWidgetItem(str(timestamp)))
+                self.tableWidget_1.setItem(rowPosition,3, QTableWidgetItem(str(sell_price)))      
+            i=1
+            for sell_signal in self.results:
+                strategy_name="buy and wait -fixed return- "+str(i)
+                i+=1
+                timestamp1=sell_signal[0][0]
+                date1=str(datetime.datetime.fromtimestamp(int(timestamp)))
+                timestamp2=sell_signal[1][0]
+                date2=str(datetime.datetime.fromtimestamp(int(timestamp)))
+                buy_price = float(sell_signal[0][1])
+                sell_price = float(sell_signal[1][1])
+                rowPosition = self.tableWidget_1.rowCount()
+                self.tableWidget_1.insertRow(rowPosition)
+                self.tableWidget_1.setItem(rowPosition,0, QTableWidgetItem(strategy_name))
+                self.tableWidget_1.setItem(rowPosition,1, QTableWidgetItem("buy: "+date1))
+                self.tableWidget_1.setItem(rowPosition,2, QTableWidgetItem("sell: "+date2))
+                self.tableWidget_1.setItem(rowPosition,3, QTableWidgetItem(str(buy_price)+"sell:"+str(sell_price)))   
+                
     def getfile(self):
         self.dlg =QFileDialog()
         self.filename, _ =  self.dlg.getOpenFileName(None,'Open file', 'c:\\',"Image files (*.txt *.csv)")

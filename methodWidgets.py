@@ -20,7 +20,7 @@ class TrendSpotWidget(QWidget):
         self.raggio=20
         self.tolleranza=0
         self.trend=False
-        
+        self.resultObject=""
         self.setMethod()
         
         Form = self
@@ -94,7 +94,7 @@ class TrendSpotWidget(QWidget):
     def reset(self, data_extractor):
         self.instance.reset(data_extractor)
         self.data_extractor=data_extractor
-        
+        self.resultObject=""
         
     def instantiateMethod(self):     
 #        try:

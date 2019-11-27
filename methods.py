@@ -7,7 +7,8 @@ Created on Fri Nov  8 16:16:27 2019
 import numpy as np
 import json
 import matplotlib.pyplot as plt
-
+import engine
+import pandas as pd
 class VolumeExtractor:   
     def __init__(self, data_extractor):
         self.distance = 20
@@ -23,7 +24,7 @@ class VolumeExtractor:
         self.data_extractor=data_extractor
         self.volumes_tuples=[]
         self.volume_blocks = []
-
+        
         
     def execute(self, timestamp):
         self.getData()
@@ -201,10 +202,13 @@ class TrendSpot:
         self.tolleranza = 0.5
         self.trend=False
         self.dati_per_plot=[]   
+        self.point_in_list=""
+        self.name="TrendSpot"
         
     def reset(self, data_extractor):
         self.data_extractor=data_extractor
         self.dati_per_plot=[] 
+        self.point_in_list==""
         
     def execute(self, timestamp):
         dati_raggio=[]
@@ -258,7 +262,25 @@ class TrendSpot:
                     if check:
     #                    timestamp=datetime.datetime.timestamp(datetime.datetime.strptime(date,'%Y-%m-%d %H:%M:%S'))
                         print(self.timestamp)
+                        if self.point_in_list=="":
+                            self.point_in_list=len(self.data_extractor.result_objects)
+                            self.df=pd.DataFrame({"date":[pd.to_datetime(self.timestamp, unit="s")]})
+                            self.df1=pd.DataFrame({close})
+                            self.resultObject=engine.ResultsToPlot()   
+                            self.resultObject.print_just_points=True
+                            self.resultObject.x=self.df
+                            self.resultObject.y=self.df1#np.array([close])
+                            self.resultObject.name=self.name
+                            self.data_extractor.result_objects.append(self.resultObject)
+                        else:
+                            self.df=pd.DataFrame({"date":[pd.to_datetime(self.timestamp, unit="s")]})
+                            self.df1=pd.DataFrame({close})
+                            self.data_extractor.result_objects[self.point_in_list].x=self.data_extractor.result_objects[self.point_in_list].x.append(self.df)
+                            print(self.data_extractor.result_objects[self.point_in_list].x)
+                            self.data_extractor.result_objects[self.point_in_list].y=self.data_extractor.result_objects[self.point_in_list].y.append(self.df1)
+#                            np.append(self.data_extractor.result_objects[self.point_in_list].y, close)
                         return True, {"result": "SpotTrend found a trend",
+                                      "ind1": "raggio={}, tolerance={}".format(self.raggio, self.tolleranza),
                                       "method-name":"TrendSpot",
                                       "timestamp":self.timestamp, 
                                       "tolleranza":self.tolleranza, 

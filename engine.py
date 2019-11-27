@@ -74,39 +74,73 @@ class Engine:
 #            if next_strategy:
             self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy, "strategy":strategy_name})
         self.data_extractor.updated_file=""
+        """
+        qual era il concetto? io compro entro un certo punto di vista:
+        lui cerca entro un certo periodo di tempo il momento per vendere. 
+        io vedo le seguenti possibilità:
+            per il live trading:
+            - vendi se il prezzo raggiunge una certa percentuale
+            - oppure se scende sotto a un certo prezzo
+            - oppure non vendere e corri il rischio
+            per le statistiche:
+            - cerca il prezzo migliore e dopo quanto è successo (sarà poi possibile controllare se ci sono altre condizioni favorevoli identificabile, tramite incrocio di dati)
+            - cerca il prezzo medio       
+            
+        devo quindi iniziare a pensare ai risultati. Intanto mi sa che la cosa migliore è salvare i dati.
+        dividere il tempo in blocci da 5 minuti. Mi sembra ragionevole. Oppure anche in secondi, ma meglio dividere. 
+        5 minuti sono 300 secondi, questo è un intervallo di timestamp ragionevole, e i dati che ho si devono adattare al mio
+        standard, in modo che tutto corrisponda. Certo salvo anche una copia con tutti i dati precisi, cioè una lista
+        o una tabella di tutti i segnali nello specifico timestamp, ma subito li converto in candele da 5 minuti
+        a ogni candela quindi possono corrispondere  infiniti dati. Risultati di ogni tipo. Anche a ogni risultato posso corrispondere
+        candele, e altri risultati, e ogni tipo di informazione.
+        
+        una cosa: impossibile nel trading lavorare con valori precisi e assoluti. Prendere un livello e sperare che questo venga
+        rispettato. sono punti di attrazione e repulsione magnetica, ma non sono perfetti, né precisi. Quindi devo adottare
+        un modo flessibile, elastico, che tenga conto della forza elestatica dei prezzi.
         
         
-    def buyAndWait(self, strategy, time_distance):
+        """
+    def buyAndWait(self, strategy, time_distance, limit=0.02):
+        time_distance = int(time_distance)*3600  #tempo da aggiungere al timestamp entro il quale cercare occasioni di vendita
         all_rows=[]
+        buy_prices=[]
         self.last_timestamp=0
         self.findBuySignal(strategy)
         file = self.data_extractor.file
         print(file)
         sell_timeframes=[]
+        print("buy results")
         print(self.buy_results)
+        """
+        per i dati in buy results. Per tutti quelli che hanno avuto successo, cioè per ogni segnale positivo di buy, lui diciamo
+        che compra e poi vede quello che succede. Per ogni segnale lui apre il file, e già qua vediamo che potrei usare un dataframe
+        
+        """
+        print(file)
+
+#        df = pd.read_csv(file, sep="," ,header=None)
+#        df.colums=["timestamp", "price", "volume"]
+#        df['timestamp'] = df['timestamp'].astype(int)
+#        df['price'] = df['price'].astype(int)
+#        df['volume'] = df['volume'].astype(int)
+#        
+#        print(df)
+
+        
         for result in self.buy_results:
             if result["succeded"]:
                 timestamp = int(result["timestamp"])
-    #            print(timestamp)
                 with open (file, "r") as f:
                      csv_reader = csv.reader(f, delimiter=',')
-#                     print(csv_reader)
-                     for row in csv_reader:
-                        
-#                         row=row.replace("\"", "")
+                     for row in csv_reader:                       
                          if len(row)==1:
-#                             print(row)
                              row=row[0].split(",")
-#                             print(row)
-#                             row=[row[0]]
-#                         row=row.replace("\"", "")
                          if int(row[0])>=timestamp:
                              print(timestamp)
                              buy_price=float(row[1])  #questi buy price devo salvarli per poi associarli con il sell price finale
                              print(buy_price)
+                             buy_prices.append((timestamp,buy_price))
                              tuple_list, rows = self.wait(buy_price, timestamp, file, timestamp+time_distance)
-    #                         print("stampo i risultati ri riga 77")
-    #                         print(tuple_list, rows)
                              sell_timeframes.append(tuple_list)
                              all_rows.append(rows)
                              break
@@ -114,17 +148,28 @@ class Engine:
 #        print(all_rows)
         tot_price=0
         numb_of_prices=0
-        for timeframe in sell_timeframes:
-            numb_of_prices+=1
-            max_price = (0,0)
-            for tupla in timeframe:
-                price = tupla[1]
-                if price > max_price[1]:
-                    max_price=tupla
-            tot_price+=max_price[1]
+        for timeframe in sell_timeframes: #per ogni lista di tuple (di un buy signal)
+            numb_of_prices+=1   #conta i rows
+            max_price = (0,0)   #azzera il max price
+            for tupla in timeframe: #per ogni tupla del buy signal
+                price = tupla[1]    #seleziona il prezzzo
+                if price > max_price[1]:    #se è maggiore del massimo (relativo a questo buy signal)
+                    max_price=tupla        #nuovo max price
+            tot_price+=max_price[1]     #tiena la somma di tutti i max prices di tutti i buy signals
         if numb_of_prices!=0:
-            average_max_price = tot_price/numb_of_prices
+            average_max_price = tot_price/numb_of_prices #fa la media di tutti i valori massimi di tutti i buy signals
+        print("average max price")
         print(average_max_price)
+        
+        results=[]      #segnali generati se il prezzo raggiunge una certa percentuale
+        for i,buy in enumerate(buy_prices):
+            sell_price= buy[1]*limit+buy[1]
+            try:
+                sell_signal=[x for x in sell_timeframes[i] if x[1] >= sell_price if x[1]<buy[1]][0]
+                results.append((buy, sell_signal))
+            except:
+                results.append((buy, (buy[0]+time_distance,float(all_rows[i][-1][1]))))
+        
         sell_signals=[]
         for rows in all_rows:
             for row in rows:
@@ -133,8 +178,18 @@ class Engine:
                     print(row)
                     break
         
+        print("results")
+        print(results)
+        
         self.data_extractor.updated_file=""
-        return sell_signals
+        print("lunghezza buy prices e contenuto")
+        print(len(buy_prices))
+        print(buy_prices)
+        print(len(self.buy_results))
+        print("lunghezza sell signals e contenuto")
+        print(len(sell_signals))
+        print(sell_signals)
+        return sell_signals, results
                     
     
     def wait(self, buy_price, timestamp, file, time_distance):
@@ -142,40 +197,20 @@ class Engine:
         rows=[]
         with open (file, "r") as f:
              csv_reader = csv.reader(f, delimiter=',')
-#             try:
-#                 row=csv_reader.__next__()
-#             except:
-#                 return tuple_list, rows
-#             
-#             while int(row[0]) < timestamp:
-#                 row=csv_reader.__next__()
              for row in csv_reader:
                  if len(row)==1:
-#                             print(row)
                      row=row[0].split(",")
                  if int(row[0])>=timestamp:
-                     break
-#             print("row:")
-#             print(row)
-##                     break
-#             while int(row[0])<time_distance:
-#                 try:
-#                     row=csv_reader.__next__()
-#                 except:
-#                    return tuple_list, rows
-            
-            
+                     break            
              for row in csv_reader:
                  if len(row)==1:
-#                             print(row)
                      row=row[0].split(",")
-#                 print(row)
-                 rows.append(row)
+                 rows.append(row)   #salva tutte le righe successive al timestamp del buy signal
                  if int(row[0])>=time_distance:                    
                      break
                  tupla = (int(row[0]), float(row[1]))
                 
-                 tuple_list.append(tupla)
+                 tuple_list.append(tupla)   #salva la tupla con timestamp e prezzo 
         return tuple_list, rows
             
     
@@ -195,7 +230,6 @@ class Engine:
                            self.signals.append(timestamp_sell)
                            check=True
                            break
-
             if check:
                 check=False
             else:
@@ -224,6 +258,13 @@ class Engine:
                 f.write(str(x))
         print(self.lists_for_plot)
         return self.name+".json",self.name+"_compared.txt"
+    
+    
+    
+    def sumAndSignal(self):
+        
+        return
+    
     
 class Strategy:
     
@@ -275,6 +316,7 @@ class Strategy:
             first_method.sort(key=lambda x: x[0])
             
             for x in first_method:
+                print(x[1])
                 self.results["layer"+str(count_layer)].append(x[1])
             self.results["layer"+str(count_layer)].append({"last_timestamp":last_timestamp})
             count_layer+=1
@@ -299,6 +341,7 @@ class PriceCross():
         self.data_extractor=data_extractor
         self.ind1= ""
         self.ind2= ""
+        self.resultObject=""
         
     def execute(self, last_timestamp):      
         self.ind1=self.indicator1.getData(last_timestamp, self.TP)
@@ -368,6 +411,7 @@ class SMAClass:
 #        self.diz2= {}
 #        self.array=[]
         self.df=""
+        self.resultObject=""
 
     def reset(self, data_extractor):
         self.data_extractor=data_extractor
@@ -386,7 +430,14 @@ class SMAClass:
         self.df, timestamp=c.creaDiz( TP, timestamp)
 
         self.values = tl.SMA(self.df[self.value_type].astype(float).values, timeperiod=self.timeperiod)
-
+        
+        if self.resultObject=="":
+            self.df["date"]=pd.to_datetime(self.df["timestamp"], unit="s")
+            self.resultObject=ResultsToPlot()
+            self.resultObject.x = self.df["date"]
+            self.resultObject.y = self.values
+            self.resultObject.name=self.name
+            self.data_extractor.result_objects.append(self.resultObject)
         return self.values.tolist()
 
 
@@ -398,10 +449,10 @@ class CandleExtractor:
     def creaDiz(self, TP, timestamp):       
         df = pd.read_csv("TP"+str(TP)+"_from_dictionary.csv")
         df['timestamp'] = df['timestamp'].astype(int)  
-        mask = df['timestamp'].values > timestamp
+       # mask = df['timestamp'].values > timestamp
+        df = df[df["timestamp"]>timestamp]
+        return df, timestamp #df[mask]
 
-        return df[mask], timestamp
-        
         
         
         
@@ -418,10 +469,10 @@ class DataExtractor:
         self.ts_end=float(ts_end)
 #        self.setFile()
         self.filename=filename
-        self.indicators_results=[]
+        self.indicators_results=[]  # = engine.list_for_plot
         self.createdFiles=[]    #contiene i nomi del file csv già creati
         self.signals=[]
-    
+        self.result_objects=[]
     
     
     def setFile(self):
@@ -430,25 +481,26 @@ class DataExtractor:
             return
 
         try:
+#            df=pd.read_csv(self.file,sep=",", header=None)
+#            print(df)
+#    #        df['timestamp'] = df['timestamp'].astype(int)  
+#            df=df[[0]>self.ts_start]
+            
             with open(self.file, "r") as f:
-#                print(self.file)
-#                print(f.readline())
                 line=f.readline()#.strip()
                 ts=line.split(",")[0]
                 ts=float(ts.replace("\"", ""))
                 while ts<self.ts_start:
                     line=f.readline()#.strip()
-#                    ts=float(line.split(",")[0])
-#                    print("stampa linea in setFile: --> "+line)
                     ts=line.split(",")[0]
                     ts=float(ts.replace("\"", ""))
                 print("trovato inizio")
+                
                 with open(self.filename, "w") as nf:
                     while ts<self.ts_end-1:
                         nf.write(line.replace("\\n", ""))
                         line=f.readline()
                         ts=line.split(",")[0]
-#                        print(ts)
                         ts=float(ts.replace("\"", ""))
                     print("creato "+self.filename)      
             self.file=self.filename
@@ -459,60 +511,7 @@ class DataExtractor:
             print("errore nella creazione del file")
             return False
         
-        
-#        self.file=self.filename
-        
-#    def updateFile(self, timestamp): 
-#        
-#        print("update del file")
-#        data=""
-#        filename=""
-#        line=""
-#        if self.updated_file=="":
-#            print("prima volta, apro il file principale, riga 380")
-#            filename=self.file
-#        else:
-#            filename="updated_file.csv"
-#            self.updated_file="updated_file.csv"
-#            print("è stato aggiornato il nome del file a upgrade_file.json, riga 385")
-#        print("apro il file "+filename)
-#        with open(filename) as f:            
-#            line = f.readline()
-#            if line.split(",")[0].replace("\"","")=="":
-#                return self.timestamp
-#            actual_timestamp = (line.split(",")[0].replace("\"",""))
-#            actual_timestamp=int(actual_timestamp)
-#            print("sta leggendo il file, riga 395")
-#            print("timestamp trasmesso:, riga 396")
-#            print(timestamp)
-#            print("timestamp attuale/iniziale del file:")
-#            print(actual_timestamp)
-#            while actual_timestamp<int(timestamp):
-#                line = f.readline()
-#    #                if line=="":
-#    #                    break
-#                actual_timestamp = int(line.split(",")[0].replace("\"",""))  
-#            
-##            data=f.readlines()
-#            data=f.read()
-#            print("file letto")
-#            print("timestamp a fine lettura:, riga 409")
-#            print(actual_timestamp)
-#            self.timestamp=actual_timestamp
-#            print("timestamp aggiornato, riga 412")
-#            print("grandezza del data estratto dal file: , riga 413:")
-#            print(len(data))
-#        self.updated_file="updated_file.csv"
-#        filename="updated_file.csv"
-#        with open(filename, "w") as f:
-#            print("sta scrivendo il file, riga 418")
-#            print(filename)
-#            for x in data:
-#                f.write(x)
-##            f.write(data)
-#            print("è stato scritto il file, linea 422")
-#        return self.timestamp#self.updated_file#, end
-#        
+       
 
     def createTPFromRawFile(self, tpValue):   #questo dovrà essere poi il self.file, così si usa sempre lo stesso timelapse
         print("chiamato createTPFfromRawFile")
@@ -824,41 +823,90 @@ class Drawer:
                 data=data.split(",")
                 data.reverse()
             li = np.array(data)
+            print("dimensioni array trenspot:  , engine.837")
+            print(len(li))
         except:
             pass
-        print(li)
+        print(self.data_extractor.indicators_results)
         for x in self.data_extractor.indicators_results:
-            for y in x:
-                for z in y:
-                    color=colors[(count-1)%7]                    
-                    if count==1:                        
-                        a,=ax1.plot(range(len(z[1])), z[1], color, label=z[0]) #abbiamo z[0] e z[1] perchè è una tupla (nome indicatore, risultati dell´indicatore)
-                        ax1.tick_params(axis='x', labelcolor=color)
+            if x[0][0][0]!="TrendSpot":
+                print(x)
+                for y in x:
+                    for z in y:
+                        color=colors[(count-1)%7]                    
+                        if count==1:                        
+                            a,=ax1.plot(range(len(z[1])), z[1], color, label=z[0]) #abbiamo z[0] e z[1] perchè è una tupla (nome indicatore, risultati dell´indicatore)
+                            ax1.tick_params(axis='x', labelcolor=color)
+                            count+=1
+                            labels.append(a)
+                            lab.append(z[0])
+                        else:
+                            ax2=ax1.twiny()                       
+                            lab.append(z[0])
+                            print("test")
+                            l=range(len(z[1]))
+                            a,=ax2.plot(l,z[1], color, label=z[0])
+                            labels.append(a)
+                            ax2.tick_params(axis='x', labelcolor=color)
                         count+=1
-                        labels.append(a)
-                        lab.append(z[0])
-                    else:
-                        ax2=ax1.twiny()                       
-                        lab.append(z[0])
-                        print("test")
-                        l=range(len(z[1]))
-                        a,=ax2.plot(l,z[1], color, label=z[0])
-                        labels.append(a)
-                        ax2.tick_params(axis='x', labelcolor=color)
-                    count+=1
         if data!="":
             ax2 = ax1.twiny()
             lab.append("trend")
             a,=ax2.plot(range(len(li)),li,colors[(count-1)%7], label="trendSpot")
             labels.append(a)
+            plt.plot([100], [300], marker='o', markersize=5, color="red")
         plt.legend(labels, lab)
         fig.tight_layout()
         plt.show()
         
+class ResultsToPlot:
+    def __init__(self):
+        self.name=""
+        self.x=[]
+        self.y=[]
+        self.print_just_points=False
         
- 
+    def plot(self):
+        if self.print_just_points:
+            plt.plot(self.x, self.y, "ro")  
+            print(self.x, self.y)
+        else:
+            plt.plot(self.x, self.y)
+        
+##        TP=240
+#        self.timeperiod=20
+#        timestamp=0
+#        self.value_type="close"
+##        c = CandleExtractor("TP"+str(TP)+"_from_dictionary.csv")
+##        c = CandleExtractor("TP"+str(TP)+".json")
+#
+#        self.df, timestamp=self.creaDiz( TP, timestamp)
+#    def do(self):
+#        self.values = tl.SMA(self.df[self.value_type].astype(float).values, timeperiod=self.timeperiod)
+#        
+#        self.df["date"]=pd.to_datetime(self.df["timestamp"], unit="s")
+##        self.resultObject=ResultsToPlot()
+#        self.x = self.df["date"]
+#        self.y = self.values
+#        print(self.x)
+#        print(len(self.values))
+#        return self.x, self.y
+#        
+#    def creaDiz(self, TP, timestamp):       
+#        df = pd.read_csv("TP"+str(TP)+"_from_dictionary.csv")
+#        df['timestamp'] = df['timestamp'].astype(int)  
+#        mask = df['timestamp'].values > timestamp
+#
+#        return df[mask], timestamp 
 
 #if __name__ == "__main__":
+#    
+#    ax, ay = ResultsToPlot(240).do()
+#    bx, by = ResultsToPlot(120).do()
+#    plt.plot(ax,ay)
+#    plt.plot(bx, by)
+#    plt.show()
+    
 #
 ##crea il data_extractor
 #
