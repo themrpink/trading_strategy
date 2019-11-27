@@ -9,7 +9,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-#import engine
+"""
+oggetto generico candela con dei metodi che serviranno poi ad analizzare i prezzi
+"""
 class Candle:
     def __init__(self):
         self.volume=0
@@ -20,13 +22,20 @@ class Candle:
         self.lower_shadow=0
         self.name="candle"
         self.criterio="close"
+        self.stop_tolerance=1.0   
         
+    """
+    controlla se il prezzo attuale è sceso sotto il prezzo d' acquisto
+    """
     def fails(self, row, price):
         if float(row["close"])<price:
             return True
         return False
-    
+    """
+    controlla se il prezzo attuale è arrivato al prezzo target
+    """    
     def succedes(self, row, target_price):
+        target_price = target_price*self.stop_tolerance
         if float(row["high"]>=target_price):
             return True
         return False
@@ -39,7 +48,9 @@ class Candle:
         self.lower_shadow=row["lower_shadow"]       
         return False
     
-    
+"""
+Estende @Candle
+"""
 def GreenHammerCandle(Candle):
     def __init__(self):
         self.name = "green hammer candle"
@@ -58,7 +69,11 @@ def GreenHammerCandle(Candle):
         #in proporzione al TP, oppure all´open e al close, ha una coda abbastanza lunga?
         #questa ultima opzione ci devo ragionare su
         
-        
+
+"""
+individua il trend del volume, l'andamento tramite la funzione della retta che 
+passa tra i valori di un blocco di dimensioni date di volume
+"""
 class VolumeSpotter:
     def __init__(self, size, data):
         self.size=size

@@ -29,16 +29,89 @@ class Engine:
         self.layers = []  #lista ordinata di oggetti di tipo methods: quindi il punto é che l´user istanzia un oggetto metodo
                             #che contiene al suo interno le istanze degli indicatori che confronta.
                             #quindi il metodo piú semplice e sintetico per rappresentare un layer è un metodo stesso
+        
+        """
+        dizionario di dizionari delle strategie->layers->metodi.
+        contiene un dizionario per ogni strategia:
+            -ciascuno di questi contiene un dizionario di layer. 
+                -Ogni layer contiene una lista di dizionari 
+                    -Ogni dizionario contiene i risultati di un metodo
+                    -un timestamp alla fine della lista se il layer è andato a buon fine
+            
+        I risultati di ogni metodo sono dizionari in varie forme, ma in generale {risultato, timestamp, inicatori, TP, nome del metodo, ecc}
+        
+        ###Struttura###      
+          {
+               "strategia1": 
+                   {
+                      "nome layer1": 
+                                      [ 
+                                        {"dati risultati metodo1"}, 
+                                        {"dati risultati metodo2"}, 
+                                        {}...
+                                      ],
+                
+                      "nome layer2": 
+                                      [ 
+                                        {"dati risultati metodo1"}, 
+                                        {"dati risultati metodo2"}, 
+                                        {}..
+                                      ],
+                          
+                       "..."
+                     },
+                       
+                "strategia2": {...}
+          }
+               
+        """
         self.results = {}   
+        #
+        """
+        self.buy_results è nella forma: 
+            lista di dizionari di tutte le strategie (riuscite o meno)
+            i dizionari sono nella forma {timestamp, succeded(True/False), strategy name}
+        """
         self.buy_results = []#qua vengono salvati i risultati ( lista di dizionari)
+        """
+        self.sell_results è analogo a self.buy_results
+        """
         self.sell_results = []
-        self.layers_structure = []  #questo è una lista di dizionari, ognuno ha un set di metodi. Questi vanno iterati fino a che non si trova il valore
+#        self.layers_structure = []  #questo è una lista di dizionari, ognuno ha un set di metodi. Questi vanno iterati fino a che non si trova il valore
+        
+        """
+        lista di tuple (timestamp buy, timestamp sell)
+        """
         self.completed_strategies=[]
         self.saved_file=""
+        """
+        lists_for _plot è una [lista di liste]:
+        -ogni lista contenuta in essa è a sua volta una [lista di tuple], tante quante sono gli indicatori del metodo.
+            -Ogni tupla è della forma ("nome indicatore", [lista con tutti i valori dell´indicatore] )
+            
+            
+                [ 
+                    [
+                        [
+                            ("nome indicatore1", [valori indicatore]),
+                            ("nome indicatore2", [valori indicatore]),
+                         
+                        ]
+                    ],
+                        
+                    [
+                       [
+                            ("nome indicatore1", [valori indicatore]),
+                            ("nome indicatore2", [valori indicatore]),
+                         
+                        ]       
+                    ]
+                ] 
+        """
         self.lists_for_plot=[]
         
-    def addLayer(self, layer):  #questo layer, che é un method, deve arrivare dalle selezioni dell´user
-        self.layers.append(layer)
+#    def addLayer(self, layer):  #questo layer, che é un method, deve arrivare dalle selezioni dell´user
+#        self.layers.append(layer)
 
         
     def findBuySignal(self, strategy):
@@ -161,13 +234,19 @@ class Engine:
         print("average max price")
         print(average_max_price)
         
+        """
+        restituisce le tuple di tuple ( (buy_timestamp, buy_price), (sell_timestamp, price_timestamp) )
+        """
         results=[]      #segnali generati se il prezzo raggiunge una certa percentuale
         for i,buy in enumerate(buy_prices):
             sell_price= buy[1]*limit+buy[1]
             try:
+                #se fallisce non ha trovato segnali e la lista è vuota
                 sell_signal=[x for x in sell_timeframes[i] if x[1] >= sell_price if x[1]<buy[1]][0]
                 results.append((buy, sell_signal))
             except:
+                #all_rows lista i (corrispondente al buy attuale) -1 perchè delle lista vogliaom l'ultimo
+                #(perchè non ha trovato un sell quindi vende all'ultimo row) e 1 perchè del row vogliamo il prezzo
                 results.append((buy, (buy[0]+time_distance,float(all_rows[i][-1][1]))))
         
         sell_signals=[]
@@ -191,7 +270,12 @@ class Engine:
         print(sell_signals)
         return sell_signals, results
                     
-    
+    """
+    restituisce la lista di tuple con tutti i dati (timestamp, prezzo)
+    successivi al timestamp dato (che sarebbe il timestamp di un buy signal) presi dal file di dati
+    e la lista di tutte le righe del file dopo il timestamp dato, e il tutto entro il tempo massimo impostato
+    dall'utente
+    """
     def wait(self, buy_price, timestamp, file, time_distance):
         tuple_list = []
         rows=[]
@@ -441,7 +525,11 @@ class SMAClass:
         return self.values.tolist()
 
 
-         
+"""
+estrae i dati dal file csv come dataframe, converte i timestamp in interi
+restituisce con creaDiz (nome rimasto dal vecchio metodo che restituiva un dizionario)
+il dataframe dei valori successivi al timestamp dato
+"""
 class CandleExtractor:
     def __init__(self, filename):
         self.filename=filename
