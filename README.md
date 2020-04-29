@@ -14,6 +14,7 @@ It also implements an user portfolio.
 
 how to use:
 lauch interfaccia_buy_and_sell.py.
+
 Then:
   open a csv file with transactions data;
   chose a time period;
