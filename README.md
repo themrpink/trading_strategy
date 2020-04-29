@@ -16,9 +16,9 @@ The code is still unstable.
 Visual interface implemented with PyQt-lib.
 
 Next steps:
--reorganize dthe code and write the documentation
--implement a better use of Pandas to import files content.
--add new indicators
--find and list the bugs
--start adding machine learning approach to optimize the portfolio management
--develop a maching learning approach to optimize the strategies
+- reorganize dthe code and write the documentation
+- implement a better use of Pandas to import files content.
+- add new indicators
+- find and list the bugs
+- start adding machine learning approach to optimize the portfolio management
+- develop a maching learning approach to optimize the strategies
