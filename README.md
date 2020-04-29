@@ -12,7 +12,7 @@ A set of layers of interactions between indicators is a strategy. A strategy can
 
 It also implements an user portfolio.
 
-#how to use
+.how to use
 lauch interfaccia_buy_and_sell.py
 then:
   open a csv file with transactions data
