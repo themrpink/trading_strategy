@@ -16,19 +16,19 @@ how to use:
 lauch interfaccia_buy_and_sell.py.
 
 Then:
-  open a csv file with transactions data;
-  chose a time period;
-  create the data;
-  create indicators and layers, both for the buy and the sell signals;
-  launch the strategy.
+open a csv file with transactions data;
+chose a time period;
+create the data;
+create indicators and layers, both for the buy and the sell signals;
+launch the strategy.
 
 The code is still unstable. 
 Visual interface implemented with PyQt-lib.
 
 Next steps:
-- reorganize dthe code and write the documentation
+- reorganize the code in smaller files and write the english documentation
 - implement a better use of Pandas to import files content.
 - add new indicators
 - find and list the bugs
-- start adding machine learning approach to optimize the portfolio management
-- develop a maching learning approach to optimize the strategies
+- start adding somple machine learning algo to optimize the portfolio management
+- develop a machine learning approach to optimize the strategies
