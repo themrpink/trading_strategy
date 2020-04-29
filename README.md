@@ -12,6 +12,15 @@ A set of layers of interactions between indicators is a strategy. A strategy can
 
 It also implements an user portfolio.
 
+#how to use
+lauch interfaccia_buy_and_sell.py
+then:
+  open a csv file with transactions data
+  chose a time period
+  create the data
+  create indicators and layers, both for the buy and the sell signals
+  launch the strategy
+
 The code is still unstable. 
 Visual interface implemented with PyQt-lib.
 
