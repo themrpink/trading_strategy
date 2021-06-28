@@ -148,7 +148,7 @@ class Engine:
             self.sell_results.append({"timestamp":self.last_timestamp, "succeded":next_strategy, "strategy":strategy_name})
         self.data_extractor.updated_file=""
         """
-        qual era il concetto? io compro entro un certo punto di vista:
+        io compro entro un certo punto
         lui cerca entro un certo periodo di tempo il momento per vendere. 
         io vedo le seguenti possibilità:
             per il live trading:
@@ -158,19 +158,6 @@ class Engine:
             per le statistiche:
             - cerca il prezzo migliore e dopo quanto è successo (sarà poi possibile controllare se ci sono altre condizioni favorevoli identificabile, tramite incrocio di dati)
             - cerca il prezzo medio       
-            
-        devo quindi iniziare a pensare ai risultati. Intanto mi sa che la cosa migliore è salvare i dati.
-        dividere il tempo in blocci da 5 minuti. Mi sembra ragionevole. Oppure anche in secondi, ma meglio dividere. 
-        5 minuti sono 300 secondi, questo è un intervallo di timestamp ragionevole, e i dati che ho si devono adattare al mio
-        standard, in modo che tutto corrisponda. Certo salvo anche una copia con tutti i dati precisi, cioè una lista
-        o una tabella di tutti i segnali nello specifico timestamp, ma subito li converto in candele da 5 minuti
-        a ogni candela quindi possono corrispondere  infiniti dati. Risultati di ogni tipo. Anche a ogni risultato posso corrispondere
-        candele, e altri risultati, e ogni tipo di informazione.
-        
-        una cosa: impossibile nel trading lavorare con valori precisi e assoluti. Prendere un livello e sperare che questo venga
-        rispettato. sono punti di attrazione e repulsione magnetica, ma non sono perfetti, né precisi. Quindi devo adottare
-        un modo flessibile, elastico, che tenga conto della forza elestatica dei prezzi.
-        
         
         """
     def buyAndWait(self, strategy, time_distance, limit=0.02):
